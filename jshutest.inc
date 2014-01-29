@@ -104,7 +104,7 @@ jshuSKIP=12
 jshuTEST_SKIP="return ${jshuSKIP}"
 
 tests=0; errors=0; failed=0; total=0; skipped=0; content=""
-
+date_cmd=`which date`
 
 jshu_pkgname=""
 jshu_suite=""
@@ -152,6 +152,7 @@ jshuInit() {
 		jshuGetPkgName
 	fi
 	jshuGetSuiteName $0
+	rm -f $jshu_content_file
 	>$jshu_content_file
 	unset _jshu_blddir
 }
@@ -167,6 +168,7 @@ jshuFinalize() {
 	echo
 	let totfail=errors+failed
 	echo "-- Number of tests         = ${tests}"
+	echo "-- Number of skipped tests = ${skipped}"
 	echo "-- Number of failing tests = ${totfail}"
 }
 
@@ -239,7 +241,7 @@ jshuRecordResult() {
 			printf " %-69s -> PASSED\n" ${_jshu_test_name}
 			;;
 		${jshuFAIL})
-			jshu_failure_msg="<failure type=\"failure\" message=\"Test Failed\"></failure>"
+			jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_errMsg}\"></failure>"
 			printf " %-69s -> FAILED\n" ${_jshu_test_name}
 			let failed=failed+1
 			;;
@@ -313,12 +315,13 @@ jshu_run_test()
 {
 	#default values
 	jshu_failure_msg=""
-	errmsg="Test failure"	# can be overridden in the tested function
+	jshu_errmsg="Test failure"	# can be overridden in the tested function
 	#function args
     _jshu_func_name=$1
     
 	_jshu_script_output=/var/tmp/jshu$$.txt
-	>$_jshu_script_output
+	rm -f "${_jshu_script_output}"
+	>"${_jshu_script_output}"
 	jshuGetTestName $_jshu_func_name
 	test_name=$jshu_test
 	
@@ -332,13 +335,13 @@ jshu_run_test()
     if [ $result -eq 0 ] ; then
 		if [ -n "$ereg" ]; then
 			H=`cat "${_jshu_script_output}" | sed -e 's/^\([^+]\)/| \1/g' | egrep $icase "$ereg"`
-			[ -n "$H" ] && result=1
+			[ -n "$H" ] && result=1 && jshu_errmsg="Regex Test failure"
 		fi
 	fi
 	
     # figure out the result and record it
-    jshuRecordResult $result ${test_name} "${errmsg}"
-    let tests=tests+1
+    jshuRecordResult $result ${test_name} "${jshu_errmsg}"
+    let tests=$tests+1
 	time=`echo "$end - $ini" | bc -l`
 	total=`echo "$total + $time" | bc -l`
 	writeTestContent ${test_name} "${time}" "${jshu_failure_msg}" "${_jshu_script_output}"

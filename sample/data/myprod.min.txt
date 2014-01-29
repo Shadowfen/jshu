@@ -1,0 +1,5 @@
+ProductName: Test Prototyper
+PkgName: tstproto
+Version: 0.7.3
+BuildNumber: 1
+Epoch: 50035
