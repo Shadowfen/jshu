@@ -68,6 +68,9 @@
 #        fi
 #   where ${SCRIPT_NAME} evaluates to the name that you use to invoke
 #   the script.
+# * This script relies on the proper recognition of the %N format
+#   character for the date(1) command. The version provided by
+#   CentOS 5.x is broken in that respect.
 #========================================================================
 #License: Simplified BSD:
 #
@@ -101,7 +104,7 @@ jshuSKIP=12
 jshuTEST_SKIP="return ${jshuSKIP}"
 
 tests=0; errors=0; failed=0; total=0; skipped=0; content=""
-date_cmd=`which date`
+
 
 jshu_pkgname=""
 jshu_suite=""
@@ -109,12 +112,26 @@ jshu_content_file=/var/tmp/jshu_content_$$.txt
 resultDir=""
 ereg=""
 
+_jshuDate() {
+	if [ ! -n "${_jshuDateFormat+x}" ] ; then
+		testdate=`date +%s.%N`
+		nano=${testdate##*.}
+		if [ "$nano" == "%N" ] ; then 
+			# date is broken
+			_jshuDateFormat="+%s.0"
+		else
+			_jshuDateFormat="+%s.%N"
+		fi
+	fi
+	date ${_jshuDateFormat}		
+}
+
 jshuSetup() {
-	echo >/dev/null
+	:
 }
 
 jshuTeardown() {
-	echo >/dev/null
+	:
 }
 
 jshuInit() {
@@ -155,7 +172,7 @@ jshuFinalize() {
 
 jshuRunTests() {
 	jshuSetup
-	_jshu_tests=`extractTestFunctions $0`
+	_jshu_tests=`jshuExtractTestFunctions $0`
 	for t in $_jshu_tests ; do
 		jshu_run_test $t
 	done
@@ -264,15 +281,11 @@ $_jshu_out
   unset _jshu_test_name _jshu_time _jshu_fail _jshu_outf _jshu_out _jshu_content
 }
 
-# Extract list of functions to run tests against.
-#
-# Args:
-#   script: string: name of script to extract functions from
-# Returns:
-#   string: of function names
-extractTestFunctions()
+# Extract from script list of functions to run tests against.
+# Returns list of function names
+jshuExtractTestFunctions()
 {
-	_jshu_script_=$1
+	_jshu_script_=$1	# name of script to extract functions from
 	
 	# extract the lines with test function names, strip of anything besides the
 	# function name, and output everything on a single line.
@@ -310,10 +323,10 @@ jshu_run_test()
 	test_name=$jshu_test
 	
 	# run the shell function
-	ini=`$date_cmd +%s.%N`
+	ini=$(_jshuDate)
 	${_jshu_func_name} &>"${_jshu_script_output}"
     result=$?
-    end=`$date_cmd +%s.%N`
+	end=$(_jshuDate)
     
     # look for regex in output for failure
     if [ $result -eq 0 ] ; then
@@ -325,37 +338,14 @@ jshu_run_test()
 	
     # figure out the result and record it
     jshuRecordResult $result ${test_name} "${errmsg}"
-    let tests=$tests+1
+    let tests=tests+1
 	time=`echo "$end - $ini" | bc -l`
 	total=`echo "$total + $time" | bc -l`
-	writeTestContent ${test_name} ${time} "${jshu_failure_msg}" "${_jshu_script_output}"
+	writeTestContent ${test_name} "${time}" "${jshu_failure_msg}" "${_jshu_script_output}"
 	rm -f "${_jshu_script_output}"
 	
 	unset _jshu_func_name _jshu_script_output
 	return $result
 }
 
-########################################################################################
-#
-#	verify_directory dirname dirdesc funcname
-#
-# This function looks for the specified directory path and creates it
-# if it is missing. It prints an ERROR message if the dirname argument is empty.
-#
-#   dirname = the name of the directory that you want to exist
-#   dirdesc = what to call the directory when printing the error message
-#   funcname = the name of the function/script that called this function (to print in
-#              error message)
-#
-########################################################################################
-verify_directory ()
-{
-	dirname=$1
-	dirdesc=$2
-	funcname=$3
-	if [ "$dirname" == "" ] ; then
-		echo "ERROR: Missing $dirdesc on call to $funcname"
-		return 1
-	fi
-	[ -d $dirname ] || mkdir -p $dirname
-}	
+
