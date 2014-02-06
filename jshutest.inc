@@ -26,7 +26,7 @@
 # Inside a test shell function, you may set the shell variable errmsg to
 # some value (typically used for error conditions to describe what happened)
 # if you do not want the default errmsg "Error found". For example:
-#    errmsg="Script ./idontexist.sh was existed!!"
+#    jshu_errmsg="Script ./idontexist.sh was existed!!"
 #
 # Inside a test shell function, you may say:
 #    ${jshuTEST_SKIP}
@@ -109,9 +109,10 @@ date_cmd=`which date`
 jshu_pkgname=""
 jshu_suite=""
 jshu_content_file=/var/tmp/jshu_content_$$.txt
-resultDir=""
+jshu_resultDir=""
 ereg=""
 
+# Determine if date command can recognize %N format specifier.
 _jshuDate() {
 	if [ ! -n "${_jshuDateFormat+x}" ] ; then
 		testdate=`date +%s.%N`
@@ -126,39 +127,48 @@ _jshuDate() {
 	date ${_jshuDateFormat}		
 }
 
+# Create function stub for one-time setup
 jshuSetup() {
 	:
 }
 
+# Create function stub for one-time teardown
 jshuTeardown() {
 	:
 }
 
+# Initialize the test suite
 jshuInit() {
+	# Create our results directory
 	#look for BUILDDIR variable
 	_jshu_blddir=`pwd`
 	if [ -z ${BUILDDIR+x} ]; then 
 		# BUILDDIR is unset
-		resultDir=${_jshu_blddir}/results
+		jshu_resultDir=${_jshu_blddir}/results
 	else
 		# BUILDDIR is set
 		_jshu_blddir=$BUILDDIR
-		resultDir=${_jshu_blddir}/results
+		jshu_resultDir=${_jshu_blddir}/results
 	fi
 	# create output folder
-	mkdir -p "$resultDir" 
+	mkdir -p "$jshu_resultDir" 
 	
+	# Set values for package name and suite name
+	# for reporting
 	if [ "${jshu_pkgname}" == "" ] ; then
 		jshuGetPkgName
 	fi
 	jshuGetSuiteName $0
+	
+	# Get rid of previous test results
 	rm -f $jshu_content_file
 	>$jshu_content_file
 	unset _jshu_blddir
 }
 
+# Write up the tests result file
 jshuFinalize() {
-	test_file="${resultDir}/TEST_${jshu_pkgname}.${jshu_suite}.xml"
+	test_file="${jshu_resultDir}/TEST_${jshu_pkgname}.${jshu_suite}.xml"
 	## testsuite block
 	
 	echo "<testsuite failures=\"${failed}\" errors=\"$errors\" tests=\"$tests\" skipped=\"${skipped}\" name=\"${jshu_pkgname}.${jshu_suite}\" time=\"${total}\">" >${test_file}
@@ -173,13 +183,15 @@ jshuFinalize() {
 }
 
 jshuRunTests() {
+	_jshu_run_curdir=`pwd`
 	jshuSetup
 	_jshu_tests=`jshuExtractTestFunctions $0`
 	for t in $_jshu_tests ; do
+		cd ${_jshu_run_curdir}
 		jshu_run_test $t
 	done
 	jshuTeardown
-	unset _jshu_tests
+	unset _jshu_tests _jshu_run_curdir
 }
 
 # package name is parent directory name unless overridden
@@ -188,6 +200,7 @@ jshuRunTests() {
 
 # Test result file name is TEST_${pkgname}.${suite}.xml
 
+# Prepare the package name for the report from the current directory
 jshuGetPkgName() {
 	# create a package name based on the directory your test script
 	# is in (if the current directory is "test" or "tests", then
@@ -204,8 +217,13 @@ jshuGetPkgName() {
 	unset _jshu_curdir _jshu_parentdir
 }
 
+# Prepare the suite name for the report from the script name
 jshu_suite=""
 jshuGetSuiteName() {
+	# the "suite" name is simply the name of your script
+	# (without the .sh extension) and embedded '.'s
+	# converted to '_'s
+	
 	# strip off directories
 	_jshu_script_name=${1##*/}
 	# strip off ".sh"
@@ -217,86 +235,85 @@ jshuGetSuiteName() {
 	unset _jshu_base_name _jshu_script_name
 }
 
+# Prepare the test name for the report from the function name
 jshu_test=""
 jshuGetTestName() {
-	# strip off directories
-	_jshu_script_name=${1##*/}
-	# strip off ".sh"
-	_jshu_base_name=${_jshu_script_name%.sh}
+	_jshu_test_name=${1}
 	# convert embedded '.' to '_'
-	jshu_test=${_jshu_base_name//./_}
+	jshu_test=${_jshu_test_name//./_}
 	# convert embedded ' ' to '_'
 	jshu_test=${jshu_test// /_}
-	unset _jshu_base_name _jshu_script_name
+	unset _jshu_test_name
 }
 
-
+# Record the result of a test for later inclusion in the test report
+# (We also do a stdout summary of test name and PASSED/FAILED/SKIPPED)
 jshuRecordResult() {
-	_jshu_type=$1
-    _jshu_test_name=$2
-	_jshu_errMsg=$3
+	_jshu_rr_type=$1
+    _jshu__rr_test_name=$2
+	_jshu_rr_errMsg=$3
 	jshu_failure_msg=""
-	case ${_jshu_type} in
+	case ${_jshu_rr_type} in
 		${jshuPASS})
-			printf " %-69s -> PASSED\n" ${_jshu_test_name}
+			printf " %-69s -> PASSED\n" ${_jshu__rr_test_name}
 			;;
 		${jshuFAIL})
-			jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_errMsg}\"></failure>"
-			printf " %-69s -> FAILED\n" ${_jshu_test_name}
+			jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\"></failure>"
+			printf " %-69s -> FAILED\n" ${_jshu__rr_test_name}
 			let failed=failed+1
 			;;
 		${jshuERROR})
-			[ -n "${_jshu_errMsg}" ] && _jshu_errMsg="Error found"
-			jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_errMsg}\"></failure>"
-			printf " %-69s -> FAILED\n" ${_jshu_test_name}
+			[ -n "${_jshu_rr_errMsg}" ] && _jshu_rr_errMsg="Error found"
+			jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\"></failure>"
+			printf " %-69s -> FAILED\n" ${_jshu__rr_test_name}
 			let errors=errors+1
 			;;
 		${jshuSKIP})
 			jshu_failure_msg="<skipped/>"
-			printf " %-69s -> SKIPPED\n" ${_jshu_test_name}
+			printf " %-69s -> SKIPPED\n" ${_jshu__rr_test_name}
 			let skipped=skipped+1
 			;;
 	esac
-	unset _jshu_type _jshu_test_name _jshu_errMsg
+	unset _jshu_rr_type _jshu__rr_test_name _jshu_rr_errMsg
 }
 
 # create the xml for a testcase result and save it
 # to the content file.
 writeTestContent()  {
-	_jshu_test_name=$1
-	_jshu_time=$2
-	_jshu_fail=$3
-	_jshu_outf=$4
-	_jshu_out=$(<$_jshu_outf)
+	_jshu_wtc_test_name=$1
+	_jshu_wtc_time=$2
+	_jshu_wtc_fail=$3
+	_jshu_wtc_outf=$4
+	_jshu_wtc_out=$(<$_jshu_wtc_outf)
   ## testcase tag
-  _jshu_content="
-    <testcase assertions=\"1\" name=\"$_jshu_test_name\" time=\"$_jshu_time\">
-    $_jshu_fail
+  _jshu_wtc_content="
+    <testcase assertions=\"1\" name=\"$_jshu_wtc_test_name\" time=\"$_jshu_wtc_time\">
+    $_jshu_wtc_fail
     <system-out>
 <![CDATA[
-$_jshu_out
+$_jshu_wtc_out
 ]]>
     </system-out>
     </testcase>
   "
-  echo "$_jshu_content" >>$jshu_content_file
-  unset _jshu_test_name _jshu_time _jshu_fail _jshu_outf _jshu_out _jshu_content
+  echo "$_jshu_wtc_content" >>$jshu_content_file
+  unset _jshu_wtc_test_name _jshu_wtc_time _jshu_wtc_fail _jshu_wtc_outf _jshu_wtc_out _jshu_wtc_content
 }
 
 # Extract from script list of functions to run tests against.
 # Returns list of function names
 jshuExtractTestFunctions()
 {
-	_jshu_script_=$1	# name of script to extract functions from
+	_jshu_etf_script_=$1	# name of script to extract functions from
 	
 	# extract the lines with test function names, strip of anything besides the
 	# function name, and output everything on a single line.
-	_jshu_regex_='^[ 	]*(function )*[A-Za-z0-9_]*Test *\(\)'
-	egrep "${_jshu_regex_}" "${_jshu_script_}" \
+	_jshu_etf_regex_='^[ 	]*(function )*[A-Za-z0-9_]*Test *\(\)'
+	egrep "${_jshu_etf_regex_}" "${_jshu_etf_script_}" \
 	  |sed 's/^[^A-Za-z0-9_]*//;s/^function //;s/\([A-Za-z0-9_]*\).*/\1/g' \
 	  |xargs
 	
-	unset _jshu_regex_ _jshu_script_
+	unset _jshu_etf_regex_ _jshu_etf_script_
 }
 
 
@@ -316,39 +333,41 @@ jshu_run_test()
 	#default values
 	jshu_failure_msg=""
 	jshu_errmsg="Test failure"	# can be overridden in the tested function
+	
 	#function args
-    _jshu_func_name=$1
+    _jshu_rt_func_name=$1
     
-	_jshu_script_output=/var/tmp/jshu$$.txt
-	rm -f "${_jshu_script_output}"
-	>"${_jshu_script_output}"
-	jshuGetTestName $_jshu_func_name
-	test_name=$jshu_test
+	_jshu_rt_script_output=/var/tmp/jshu$$.txt
+	rm -f "${_jshu_rt_script_output}"
+	>"${_jshu_rt_script_output}"
+	jshuGetTestName $_jshu_rt_func_name
+	_jshu_rt_test_name=$jshu_test
 	
 	# run the shell function
-	ini=$(_jshuDate)
-	${_jshu_func_name} &>"${_jshu_script_output}"
-    result=$?
-	end=$(_jshuDate)
+	_jshu_rt_startTime=$(_jshuDate)
+	${_jshu_rt_func_name} &>"${_jshu_rt_script_output}"
+    _jshu_result=$?
+	_jshu_rt_endTime=$(_jshuDate)
     
     # look for regex in output for failure
-    if [ $result -eq 0 ] ; then
+    if [ $_jshu_result -eq 0 ] ; then
 		if [ -n "$ereg" ]; then
-			H=`cat "${_jshu_script_output}" | sed -e 's/^\([^+]\)/| \1/g' | egrep $icase "$ereg"`
-			[ -n "$H" ] && result=1 && jshu_errmsg="Regex Test failure"
+			H=`cat "${_jshu_rt_script_output}" | sed -e 's/^\([^+]\)/| \1/g' | egrep $icase "$ereg"`
+			[ -n "$H" ] && _jshu_result=1 && jshu_errmsg="Regex Test failure"
 		fi
 	fi
 	
     # figure out the result and record it
-    jshuRecordResult $result ${test_name} "${jshu_errmsg}"
+    jshuRecordResult $_jshu_result ${_jshu_rt_test_name} "${jshu_errmsg}"
     let tests=$tests+1
-	time=`echo "$end - $ini" | bc -l`
+	time=`echo "$_jshu_rt_endTime - $_jshu_rt_startTime" | bc -l`
 	total=`echo "$total + $time" | bc -l`
-	writeTestContent ${test_name} "${time}" "${jshu_failure_msg}" "${_jshu_script_output}"
-	rm -f "${_jshu_script_output}"
+	writeTestContent ${_jshu_rt_test_name} "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
+	rm -f "${_jshu_rt_script_output}"
 	
-	unset _jshu_func_name _jshu_script_output
-	return $result
+	unset _jshu_rt_func_name _jshu_rt_script_output _jshu_rt_test_name
+	unset _jshu_rt_startTime _jshu_rt_endTime
+	return $_jshu_result
 }
 
 

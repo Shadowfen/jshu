@@ -1,0 +1,4 @@
+Version 1.0.6
+* Change directory back to where the test script was started from before executing
+  each test function.
+* Miscellaneous code cleanup and commenting.
