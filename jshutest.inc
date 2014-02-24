@@ -269,7 +269,7 @@ jshuRecordResult() {
 			let errors=errors+1
 			;;
 		${jshuSKIP})
-			jshu_failure_msg="<skipped/>"
+			jshu_failure_msg="<skipped message=\"${_jshu_rr_errMsg}\"></skipped>"
 			printf " %-69s -> SKIPPED\n" ${_jshu__rr_test_name}
 			let skipped=skipped+1
 			;;
