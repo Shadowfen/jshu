@@ -1,6 +1,8 @@
 Version 1.0.7
 * Add support for skipped test messages now that I know Jenkins can display them.
   Simply assign your skip message to jshu_errmsg before the ${jshuTEST_SKIP}.
+  (See unfinishedTest() in sample/incrbuild_unitTest.sh for example.)
+
 Version 1.0.6
 * Change directory back to where the test script was started from before executing
   each test function.
