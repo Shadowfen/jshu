@@ -260,6 +260,12 @@ loadBldNumFileTest() {
 	return ${jshuPASS}
 }
 
+unfinishedTest() {
+    jshu_errmsg="This test has not been written yet"
+    ${jshuTEST_SKIP}
+}
+
+
 
 ##############################################################
 # main

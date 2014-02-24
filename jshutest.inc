@@ -258,18 +258,27 @@ jshuRecordResult() {
 			printf " %-69s -> PASSED\n" ${_jshu__rr_test_name}
 			;;
 		${jshuFAIL})
+		    if [ -z "$_jshu_rr_errMsg" ] ; then
+		        _jshu_rr_errMsg="Test failure"
+		    fi
 			jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\"></failure>"
 			printf " %-69s -> FAILED\n" ${_jshu__rr_test_name}
 			let failed=failed+1
 			;;
 		${jshuERROR})
-			[ -n "${_jshu_rr_errMsg}" ] && _jshu_rr_errMsg="Error found"
+		    if [ -z "$_jshu_rr_errMsg" ] ; then
+		        _jshu_rr_errMsg="Error found"
+		    fi
 			jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\"></failure>"
 			printf " %-69s -> FAILED\n" ${_jshu__rr_test_name}
 			let errors=errors+1
 			;;
 		${jshuSKIP})
-			jshu_failure_msg="<skipped message=\"${_jshu_rr_errMsg}\"></skipped>"
+		    if [ -z "$_jshu_rr_errMsg" ] ; then
+			    jshu_failure_msg="<skipped message=\"${_jshu_rr_errMsg}\"></skipped>"
+            else
+                jshu_failure_msg="<skipped/>"
+		    fi
 			printf " %-69s -> SKIPPED\n" ${_jshu__rr_test_name}
 			let skipped=skipped+1
 			;;
@@ -332,7 +341,7 @@ jshu_run_test()
 {
 	#default values
 	jshu_failure_msg=""
-	jshu_errmsg="Test failure"	# can be overridden in the tested function
+	jshu_errmsg=""	# can be overridden in the tested function
 	
 	#function args
     _jshu_rt_func_name=$1
