@@ -246,12 +246,23 @@ jshuGetTestName() {
 	unset _jshu_test_name
 }
 
+# replace embedded quotes in error message with html entity
+jshuSafeErrMsg() {
+    _jshu_safe_errmsg="$1"
+    _jshu_q="&quot;"
+	# convert embedded '"' to '&quot;'
+	_jshu_safe_errmsg=${_jshu_safe_errmsg//\"/$_jshu_q}
+	echo "${_jshu_safe_errmsg}"
+	unset _jshu_safe_errmsg
+}
+
 # Record the result of a test for later inclusion in the test report
 # (We also do a stdout summary of test name and PASSED/FAILED/SKIPPED)
 jshuRecordResult() {
 	_jshu_rr_type=$1
     _jshu__rr_test_name=$2
-	_jshu_rr_errMsg=$3
+    _jshu_rr_errMsg=$(jshuSafeErrMsg "$3")
+    echo _jshu_rr_errMsg=$_jshu_rr_errMsg
 	jshu_failure_msg=""
 	case ${_jshu_rr_type} in
 		${jshuPASS})
@@ -274,7 +285,7 @@ jshuRecordResult() {
 			let errors=errors+1
 			;;
 		${jshuSKIP})
-		    if [ -z "$_jshu_rr_errMsg" ] ; then
+		    if [ ! -z "$_jshu_rr_errMsg" ] ; then
 			    jshu_failure_msg="<skipped message=\"${_jshu_rr_errMsg}\"></skipped>"
             else
                 jshu_failure_msg="<skipped/>"

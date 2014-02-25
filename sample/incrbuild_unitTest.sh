@@ -260,6 +260,11 @@ loadBldNumFileTest() {
 	return ${jshuPASS}
 }
 
+badErrorMsgTest() {
+    jshu_errmsg="This is a \" quote mark"
+    ${jshuTEST_SKIP}
+}
+
 unfinishedTest() {
     jshu_errmsg="This test has not been written yet"
     ${jshuTEST_SKIP}
