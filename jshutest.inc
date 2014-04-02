@@ -256,13 +256,21 @@ jshuSafeErrMsg() {
 	unset _jshu_safe_errmsg
 }
 
+# filter out binary data from stdout/stderr contents
+jshuSafeContent() {
+    _jshu_sc_outf="$1"
+    _jshu_sc_savf="$1.orig"
+    /bin/cp -f $_jshu_sc_outf $_jshu_sc_savf
+    tr -cd '\11\12\15\40-\176' <$_jshu_sc_savf >$_jshu_wtc_outf
+    unset _jshu_sc_outf _jshu_sc_savf
+}
+
 # Record the result of a test for later inclusion in the test report
 # (We also do a stdout summary of test name and PASSED/FAILED/SKIPPED)
 jshuRecordResult() {
 	_jshu_rr_type=$1
     _jshu__rr_test_name=$2
     _jshu_rr_errMsg=$(jshuSafeErrMsg "$3")
-    echo _jshu_rr_errMsg=$_jshu_rr_errMsg
 	jshu_failure_msg=""
 	case ${_jshu_rr_type} in
 		${jshuPASS})
@@ -305,8 +313,9 @@ writeTestContent()  {
 	_jshu_wtc_fail=$3
 	_jshu_wtc_outf=$4
 	_jshu_wtc_out=$(<$_jshu_wtc_outf)
-  ## testcase tag
-  _jshu_wtc_content="
+	jshuSafeContent $_jshu_wtc_outf
+	## testcase tag
+	_jshu_wtc_content="
     <testcase assertions=\"1\" name=\"$_jshu_wtc_test_name\" time=\"$_jshu_wtc_time\">
     $_jshu_wtc_fail
     <system-out>
@@ -316,8 +325,8 @@ $_jshu_wtc_out
     </system-out>
     </testcase>
   "
-  echo "$_jshu_wtc_content" >>$jshu_content_file
-  unset _jshu_wtc_test_name _jshu_wtc_time _jshu_wtc_fail _jshu_wtc_outf _jshu_wtc_out _jshu_wtc_content
+    echo "$_jshu_wtc_content" >>$jshu_content_file
+    unset _jshu_wtc_test_name _jshu_wtc_time _jshu_wtc_fail _jshu_wtc_outf _jshu_wtc_out _jshu_wtc_content
 }
 
 # Extract from script list of functions to run tests against.

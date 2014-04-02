@@ -1,3 +1,7 @@
+Version 1.0.0-9
+* Filter binary (unprintable) characters out of the CDATA stdout capture to
+  prevent malformed XML.
+  
 Version 1.0.0-8
 * Fix problem of malformed xml when a jshu_errmsg string has an embedded quote mark. 
   Convert it to html entity &quot; .
