@@ -1,3 +1,6 @@
+Version 1.0.0-10
+* Protect against missing captured output file
+
 Version 1.0.0-9
 * Filter binary (unprintable) characters out of the CDATA stdout capture to
   prevent malformed XML.
