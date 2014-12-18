@@ -1,3 +1,9 @@
+Version 1.0.0-11
+* Bring back build 9 and then protect against missing capture file.
+
+Version 1.0.0-10
+* bad release - reverts back to 1.0.0-5
+
 Version 1.0.0-9
 * Filter binary (unprintable) characters out of the CDATA stdout capture to
   prevent malformed XML.

@@ -312,7 +312,11 @@ writeTestContent()  {
 	_jshu_wtc_time=$2
 	_jshu_wtc_fail=$3
 	_jshu_wtc_outf=$4
-	_jshu_wtc_out=$(<$_jshu_wtc_outf)
+        if [ -e $_jshu_wtc_outf ] ; then
+		_jshu_wtc_out=$(<$_jshu_wtc_outf)
+	else
+		_jshu_wtc_out="No such file ($_jshu_wtc_outf) found. Could not read test output."
+	fi
 	jshuSafeContent $_jshu_wtc_outf
 	## testcase tag
 	_jshu_wtc_content="
