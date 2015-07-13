@@ -1,0 +1,5 @@
+ProductName: Unknown product
+PkgName: unknown_pkg
+Version: 0.0.0
+BuildNumber: 1
+Epoch: 1
