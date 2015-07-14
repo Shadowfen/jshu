@@ -1,3 +1,8 @@
+Version 1.0.0-12
+* Prevent test result writing from erroring out when you call a test script
+  from a test script - as long as you are in a bash shell - because only the bash
+  shell provides a means of getting a subshell pid.
+
 Version 1.0.0-11
 * Bring back build 9 and then protect against missing capture file.
 

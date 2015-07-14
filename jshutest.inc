@@ -3,6 +3,8 @@
 # Simplified unit test framework for shell script which
 # produces junit-style xml results file (for Jenkins/Hudson).
 #
+# version 1.0.0-12
+#
 # Include this file into your test shellscript using ". /usr/local/include/jshutest.inc"
 # (or whatever path is appropriate to find this file).
 #
@@ -106,9 +108,17 @@ jshuTEST_SKIP="return ${jshuSKIP}"
 tests=0; errors=0; failed=0; total=0; skipped=0; content=""
 date_cmd=`which date`
 
+CURPROC=$$
+# If we are in a bash shell, we can use this to get subshell pids.
+# Otherwise, we can only get the parent shell pid (making jshu
+# not capable of nesting test scripts).
+if [ -z ${BASHPID+x} ] || [ -z $BASHPID ] ; then
+    CURPROC=$BASHPID
+fi
+
 jshu_pkgname=""
 jshu_suite=""
-jshu_content_file=/var/tmp/jshu_content_$$.txt
+jshu_content_file=/var/tmp/jshu_content_${CURPROC}.txt
 jshu_resultDir=""
 ereg=""
 
@@ -370,7 +380,7 @@ jshu_run_test()
 	#function args
     _jshu_rt_func_name=$1
     
-	_jshu_rt_script_output=/var/tmp/jshu$$.txt
+	_jshu_rt_script_output=/var/tmp/jshu${CURPROC}.txt
 	rm -f "${_jshu_rt_script_output}"
 	>"${_jshu_rt_script_output}"
 	jshuGetTestName $_jshu_rt_func_name
