@@ -1,3 +1,7 @@
+Version 1.0.0-13
+* Modify calling of jshuSetup and jshuTeardown functions so that if they fail 
+  for some reason, the failure will be caught and reported.
+  
 Version 1.0.0-12
 * Prevent test result writing from erroring out when you call a test script
   from a test script - as long as you are in a bash shell - because only the bash

@@ -3,7 +3,7 @@
 # Simplified unit test framework for shell script which
 # produces junit-style xml results file (for Jenkins/Hudson).
 #
-# version 1.0.0-12
+# version 1.0.0-13
 #
 # Include this file into your test shellscript using ". /usr/local/include/jshutest.inc"
 # (or whatever path is appropriate to find this file).
@@ -194,13 +194,17 @@ jshuFinalize() {
 
 jshuRunTests() {
 	_jshu_run_curdir=`pwd`
-	jshuSetup
+	if ! jshu_run_test jshuSetup; then
+	    return 1
+	fi
 	_jshu_tests=`jshuExtractTestFunctions $0`
 	for t in $_jshu_tests ; do
 		cd ${_jshu_run_curdir}
 		jshu_run_test $t
 	done
-	jshuTeardown
+	if ! jshu_run_test jshuTeardown; then
+	    return 1
+	fi
 	unset _jshu_tests _jshu_run_curdir
 }
 
@@ -401,11 +405,20 @@ jshu_run_test()
 	fi
 	
     # figure out the result and record it
-    jshuRecordResult $_jshu_result ${_jshu_rt_test_name} "${jshu_errmsg}"
-    let tests=$tests+1
-	time=`echo "$_jshu_rt_endTime - $_jshu_rt_startTime" | bc -l`
-	total=`echo "$total + $time" | bc -l`
-	writeTestContent ${_jshu_rt_test_name} "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
+    if [ "${_jshu_rt_test_name}" == "jshuSetup" -o "${_jshu_rt_test_name}" == "jshuTeardown" ]; then
+        if [ "$_jshu_result" != "0" ]; then
+            jshuRecordResult $_jshu_result ${_jshu_rt_test_name} "Failed to run ${_jshu_rt_test_name}"
+            time=`echo "$_jshu_rt_endTime - $_jshu_rt_startTime" | bc -l`
+            total=`echo "$total + $time" | bc -l`
+            writeTestContent ${_jshu_rt_test_name} "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
+        fi
+    else
+        jshuRecordResult $_jshu_result ${_jshu_rt_test_name} "${jshu_errmsg}"
+        let tests=$tests+1
+        time=`echo "$_jshu_rt_endTime - $_jshu_rt_startTime" | bc -l`
+        total=`echo "$total + $time" | bc -l`
+        writeTestContent ${_jshu_rt_test_name} "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
+    fi
 	rm -f "${_jshu_rt_script_output}"
 	
 	unset _jshu_rt_func_name _jshu_rt_script_output _jshu_rt_test_name
