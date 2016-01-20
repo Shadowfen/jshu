@@ -3,7 +3,7 @@
 # Simplified unit test framework for shell script which
 # produces junit-style xml results file (for Jenkins/Hudson).
 #
-# version 1.0.0-13
+# version 1.0.0-14
 #
 # Include this file into your test shellscript using ". /usr/local/include/jshutest.inc"
 # (or whatever path is appropriate to find this file).
@@ -12,6 +12,10 @@
 # ${jshuPASS} - (0) if the test passes
 # ${jshuFAIL} - (1) if the test fails
 # ${jshuERROR} - (2) if an error occured other than a test failure
+# ${jshuFAILABORT} - (3) if test fails and test suite should abort (do not
+#                          run following tests)
+# ${jshuERRORABORT} - (4) if an error occurs and test suite should abort (do not
+#                          run following tests)
 #
 # The meat of the test shell function performs the test. It can do so locally
 # (inside this shell script) or it can call external shell scripts and
@@ -101,6 +105,8 @@
 jshuPASS=0
 jshuFAIL=1
 jshuERROR=2
+jshuFAILABORT=3
+jshuERRORABORT=4
 jshuSKIP=12
 
 jshuTEST_SKIP="return ${jshuSKIP}"
@@ -201,6 +207,10 @@ jshuRunTests() {
 	for t in $_jshu_tests ; do
 		cd ${_jshu_run_curdir}
 		jshu_run_test $t
+		rslt=$?
+		if [ $rslt -eq ${jshuFAILABORT} -o $rslt -eq ${jshuERRORABORT} ]; then
+		    break
+		fi
 	done
 	if ! jshu_run_test jshuTeardown; then
 	    return 1
@@ -299,6 +309,22 @@ jshuRecordResult() {
 			let failed=failed+1
 			;;
 		${jshuERROR})
+		    if [ -z "$_jshu_rr_errMsg" ] ; then
+		        _jshu_rr_errMsg="Error found"
+		    fi
+			jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\"></failure>"
+			printf " %-69s -> FAILED\n" ${_jshu__rr_test_name}
+			let errors=errors+1
+			;;
+		${jshuFAILABORT})
+		    if [ -z "$_jshu_rr_errMsg" ] ; then
+		        _jshu_rr_errMsg="Test failure"
+		    fi
+			jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\"></failure>"
+			printf " %-69s -> FAILED\n" ${_jshu__rr_test_name}
+			let failed=failed+1
+			;;
+		${jshuERRORABORT})
 		    if [ -z "$_jshu_rr_errMsg" ] ; then
 		        _jshu_rr_errMsg="Error found"
 		    fi

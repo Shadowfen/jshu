@@ -1,3 +1,8 @@
+Version 1.0.0-14
+* Add two possible return values for a test - ${jshuFAILABORT} and
+  ${jshuERRORABORT}. These allow you to mark failures and errors in a test
+  that are so severe that the rest of the tests in the test suite should not
+  be run.
 Version 1.0.0-13
 * Modify calling of jshuSetup and jshuTeardown functions so that if they fail 
   for some reason, the failure will be caught and reported.
