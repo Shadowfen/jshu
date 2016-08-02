@@ -1,3 +1,9 @@
+Version 1.0.0-15
+* Add the ability to specify test function names in a variable (jshuTestFunctions)
+  that will be run before the discovered functions (those whose names end with Test).
+  See the test/addhocFunctionNamesTest.sh script or the sample/incrbuild_unitTest.sh
+  script for an example of use.
+  
 Version 1.0.0-14
 * Add two possible return values for a test - ${jshuFAILABORT} and
   ${jshuERRORABORT}. These allow you to mark failures and errors in a test

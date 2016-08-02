@@ -3,7 +3,7 @@
 # Simplified unit test framework for shell script which
 # produces junit-style xml results file (for Jenkins/Hudson).
 #
-# version 1.0.0-14
+# version 1.0.0-15
 #
 # Include this file into your test shellscript using ". /usr/local/include/jshutest.inc"
 # (or whatever path is appropriate to find this file).
@@ -16,6 +16,8 @@
 #                          run following tests)
 # ${jshuERRORABORT} - (4) if an error occurs and test suite should abort (do not
 #                          run following tests)
+# As of 1.0.0-15 it is now possible to specify a list of function names that
+# do not end with "Test" which you wish to run as test functions.
 #
 # The meat of the test shell function performs the test. It can do so locally
 # (inside this shell script) or it can call external shell scripts and
@@ -128,6 +130,8 @@ jshu_content_file=/var/tmp/jshu_content_${CURPROC}.txt
 jshu_resultDir=""
 ereg=""
 
+jshuTestFunctions=""
+
 # Determine if date command can recognize %N format specifier.
 _jshuDate() {
 	if [ ! -n "${_jshuDateFormat+x}" ] ; then
@@ -204,6 +208,9 @@ jshuRunTests() {
 	    return 1
 	fi
 	_jshu_tests=`jshuExtractTestFunctions $0`
+	if [ -n "$jshuTestFunctions" ]; then
+	    _jshu_tests="$jshuTestFunctions $_jshu_tests"
+	fi
 	for t in $_jshu_tests ; do
 		cd ${_jshu_run_curdir}
 		jshu_run_test $t
@@ -284,7 +291,7 @@ jshuSafeErrMsg() {
 jshuSafeContent() {
     _jshu_sc_outf="$1"
     _jshu_sc_savf="$1.orig"
-    /bin/cp -f $_jshu_sc_outf $_jshu_sc_savf
+    /bin/cp $_jshu_sc_outf $_jshu_sc_savf
     tr -cd '\11\12\15\40-\176' <$_jshu_sc_savf >$_jshu_wtc_outf
     unset _jshu_sc_outf _jshu_sc_savf
 }
@@ -352,7 +359,7 @@ writeTestContent()  {
 	_jshu_wtc_time=$2
 	_jshu_wtc_fail=$3
 	_jshu_wtc_outf=$4
-        if [ -e $_jshu_wtc_outf ] ; then
+    if [ -e $_jshu_wtc_outf ] ; then
 		_jshu_wtc_out=$(<$_jshu_wtc_outf)
 	else
 		_jshu_wtc_out="No such file ($_jshu_wtc_outf) found. Could not read test output."

@@ -6,9 +6,18 @@
 # source our script that we want to test features of
 . ./increment_build.sh
 
+jshuSetup() {
+    # set this variable to a space-delimited list of non-standard test function 
+    # names that you want to run as tests. They will run before the *Test 
+    # functions. It will be used by the jshuRunTests function, so if you
+    # want to use it, you should assign the value to it before calling
+    # jshuRunTests in the bottom (boilerplate) section.
+    jshuTestFunctions="parseVersion getBldFileName_noParam"
+}
+
 ##############################################################
 # unit test functions
-parseVersionTest() {
+parseVersion() {
 	VERSION="1.5.7"
 	parseVersion
 	if [ "$VERSION_SUPER" != "1" ] ; then
@@ -158,7 +167,7 @@ incrBuildTest() {
 	return ${jshuPASS}
 }
 
-getBldFileName_noParamTest() {
+getBldFileName_noParam() {
 	bfname=$(getBldNumFilename)
 	if [ "$bfname" != "buildnumber.txt" ] ; then
 		return ${jshuFAIL}
