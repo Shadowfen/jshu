@@ -3,7 +3,7 @@
 # Simplified unit test framework for shell script which
 # produces junit-style xml results file (for Jenkins/Hudson).
 #
-# version 1.0.0-15
+# version 1.0.0-16
 #
 # Include this file into your test shellscript using ". /usr/local/include/jshutest.inc"
 # (or whatever path is appropriate to find this file).
@@ -212,12 +212,20 @@ jshuRunTests() {
 	    _jshu_tests="$jshuTestFunctions $_jshu_tests"
 	fi
 	for t in $_jshu_tests ; do
-		cd ${_jshu_run_curdir}
-		jshu_run_test $t
-		rslt=$?
-		if [ $rslt -eq ${jshuFAILABORT} -o $rslt -eq ${jshuERRORABORT} ]; then
-		    break
-		fi
+	    if type -t $t &>/dev/null; then
+            cd ${_jshu_run_curdir}
+            jshu_run_test $t
+            rslt=$?
+            if [ $rslt -eq ${jshuFAILABORT} -o $rslt -eq ${jshuERRORABORT} ]; then
+                break
+            fi
+        else
+            # named function does not exist - now what?
+            jshuRecordResult $jshuFAIL $t "Failed to run $t - test function does not exist"
+            touch /var/tmp/jshut_$$
+            writeTestContent $t "0" "Test function does not exist in script" /var/tmp/jshut_$$
+            rm -f /var/tmp/jshut_$$
+        fi
 	done
 	if ! jshu_run_test jshuTeardown; then
 	    return 1

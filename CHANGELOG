@@ -1,3 +1,7 @@
+Version 1.0.0-16
+* Check to make sure that any test function names that were provided (as opposed
+  to discovered) actually exist in the test script.
+  
 Version 1.0.0-15
 * Add the ability to specify test function names in a variable (jshuTestFunctions)
   that will be run before the discovered functions (those whose names end with Test).
