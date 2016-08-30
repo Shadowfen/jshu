@@ -191,9 +191,9 @@ jshuFinalize() {
 	test_file="${jshu_resultDir}/TEST_${jshu_pkgname}.${jshu_suite}.xml"
 	## testsuite block
 	
-	echo "<testsuite failures=\"${failed}\" errors=\"$errors\" tests=\"$tests\" skipped=\"${skipped}\" name=\"${jshu_pkgname}.${jshu_suite}\" time=\"${total}\">" >${test_file}
-	cat $jshu_content_file >>$test_file
-	echo "</testsuite>" >>$test_file
+	echo "<testsuite failures=\"${failed}\" errors=\"$errors\" tests=\"$tests\" skipped=\"${skipped}\" name=\"${jshu_pkgname}.${jshu_suite}\" time=\"${total}\">" >"${test_file}""
+	cat $jshu_content_file >>"$test_file"
+	echo "</testsuite>" >>"$test_file"
 	rm -f $jshu_content_file
 	echo
 	let totfail=errors+failed
@@ -213,7 +213,7 @@ jshuRunTests() {
 	fi
 	for t in $_jshu_tests ; do
 	    if type -t $t &>/dev/null; then
-            cd ${_jshu_run_curdir}
+            cd "${_jshu_run_curdir}""
             jshu_run_test $t
             rslt=$?
             if [ $rslt -eq ${jshuFAILABORT} -o $rslt -eq ${jshuERRORABORT} ]; then
