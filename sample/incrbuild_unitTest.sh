@@ -12,12 +12,12 @@ jshuSetup() {
     # functions. It will be used by the jshuRunTests function, so if you
     # want to use it, you should assign the value to it before calling
     # jshuRunTests in the bottom (boilerplate) section.
-    jshuTestFunctions="parseVersion getBldFileName_noParam"
+    jshuTestFunctions="parseVersionFunc getBldFileName_noParam"
 }
 
 ##############################################################
 # unit test functions
-parseVersion() {
+parseVersionFunc() {
 	VERSION="1.5.7"
 	parseVersion
 	if [ "$VERSION_SUPER" != "1" ] ; then
