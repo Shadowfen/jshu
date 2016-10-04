@@ -1,3 +1,6 @@
+Version 1.0.0-18
+* Fixed up function ordering errors and a dangling quote.
+
 Version 1.0.0-17
 * Patches submitted by ireicht to fix issues with file paths that have embedded spaces and to fix a segfault in the sample/incrbuild_unitTest.sh
 * Modification to the patched sample/incrbuild_unitTest.sh to change the name ofa "dynamic" test function so that it will not also be a "discovered" test function (so the test will not run twice).

@@ -147,6 +147,58 @@ _jshuDate() {
 	date ${_jshuDateFormat}		
 }
 
+# package name is parent directory name unless overridden
+# suite name is the name of the test script (without .sh)
+# class name is the name of the unit test function
+
+# Test result file name is TEST_${pkgname}.${suite}.xml
+
+# Prepare the package name for the report from the current directory
+jshuGetPkgName() {
+	# create a package name based on the directory your test script
+	# is in (if the current directory is "test" or "tests", then
+	# use the name of the directory above it
+	_jshu_curdir=`pwd`
+	_jshu_parentdir=${_jshu_curdir##*/}
+	if [ $_jshu_parentdir == "test" -o $_jshu_parentdir == "tests" ] ; then
+		_jshu_curdir=${_jshu_curdir%/*}
+		_jshu_parentdir=${_jshu_curdir##*/}
+	fi
+	jshu_pkgname=${_jshu_parentdir//./_}
+	# convert embedded ' ' to '_'
+	jshu_pkgname=${jshu_pkgname// /_}
+	unset _jshu_curdir _jshu_parentdir
+}
+
+# Prepare the suite name for the report from the script name
+jshu_suite=""
+jshuGetSuiteName() {
+	# the "suite" name is simply the name of your script
+	# (without the .sh extension) and embedded '.'s
+	# converted to '_'s
+	
+	# strip off directories
+	_jshu_script_name=${1##*/}
+	# strip off ".sh"
+	_jshu_base_name=${_jshu_script_name%.sh}
+	# convert embedded '.' to '_'
+	jshu_suite=${_jshu_base_name//./_}
+	# convert embedded ' ' to '_'
+	jshu_suite=${jshu_suite// /_}
+	unset _jshu_base_name _jshu_script_name
+}
+
+# Prepare the test name for the report from the function name
+jshu_test=""
+jshuGetTestName() {
+	_jshu_test_name=${1}
+	# convert embedded '.' to '_'
+	jshu_test=${_jshu_test_name//./_}
+	# convert embedded ' ' to '_'
+	jshu_test=${jshu_test// /_}
+	unset _jshu_test_name
+}
+
 # Create function stub for one-time setup
 jshuSetup() {
 	:
@@ -213,7 +265,7 @@ jshuRunTests() {
 	fi
 	for t in $_jshu_tests ; do
 	    if type -t $t &>/dev/null; then
-            cd "${_jshu_run_curdir}""
+            cd "${_jshu_run_curdir}"
             jshu_run_test $t
             rslt=$?
             if [ $rslt -eq ${jshuFAILABORT} -o $rslt -eq ${jshuERRORABORT} ]; then
@@ -231,58 +283,6 @@ jshuRunTests() {
 	    return 1
 	fi
 	unset _jshu_tests _jshu_run_curdir
-}
-
-# package name is parent directory name unless overridden
-# suite name is the name of the test script (without .sh)
-# class name is the name of the unit test function
-
-# Test result file name is TEST_${pkgname}.${suite}.xml
-
-# Prepare the package name for the report from the current directory
-jshuGetPkgName() {
-	# create a package name based on the directory your test script
-	# is in (if the current directory is "test" or "tests", then
-	# use the name of the directory above it
-	_jshu_curdir=`pwd`
-	_jshu_parentdir=${_jshu_curdir##*/}
-	if [ $_jshu_parentdir == "test" -o $_jshu_parentdir == "tests" ] ; then
-		_jshu_curdir=${_jshu_curdir%/*}
-		_jshu_parentdir=${_jshu_curdir##*/}
-	fi
-	jshu_pkgname=${_jshu_parentdir//./_}
-	# convert embedded ' ' to '_'
-	jshu_pkgname=${jshu_pkgname// /_}
-	unset _jshu_curdir _jshu_parentdir
-}
-
-# Prepare the suite name for the report from the script name
-jshu_suite=""
-jshuGetSuiteName() {
-	# the "suite" name is simply the name of your script
-	# (without the .sh extension) and embedded '.'s
-	# converted to '_'s
-	
-	# strip off directories
-	_jshu_script_name=${1##*/}
-	# strip off ".sh"
-	_jshu_base_name=${_jshu_script_name%.sh}
-	# convert embedded '.' to '_'
-	jshu_suite=${_jshu_base_name//./_}
-	# convert embedded ' ' to '_'
-	jshu_suite=${jshu_suite// /_}
-	unset _jshu_base_name _jshu_script_name
-}
-
-# Prepare the test name for the report from the function name
-jshu_test=""
-jshuGetTestName() {
-	_jshu_test_name=${1}
-	# convert embedded '.' to '_'
-	jshu_test=${_jshu_test_name//./_}
-	# convert embedded ' ' to '_'
-	jshu_test=${jshu_test// /_}
-	unset _jshu_test_name
 }
 
 # replace embedded quotes in error message with html entity
@@ -350,8 +350,8 @@ jshuRecordResult() {
 		${jshuSKIP})
 		    if [ ! -z "$_jshu_rr_errMsg" ] ; then
 			    jshu_failure_msg="<skipped message=\"${_jshu_rr_errMsg}\"></skipped>"
-            else
-                jshu_failure_msg="<skipped/>"
+                    else
+                        jshu_failure_msg="<skipped/>"
 		    fi
 			printf " %-69s -> SKIPPED\n" ${_jshu__rr_test_name}
 			let skipped=skipped+1
