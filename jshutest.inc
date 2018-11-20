@@ -131,6 +131,7 @@ fi
 
 jshu_pkgname=""
 jshu_suite=""
+jshu_suitename=""
 jshu_content_file=/var/tmp/jshu_content_${CURPROC}.txt
 jshu_resultDir=""
 ereg=""
@@ -182,14 +183,22 @@ jshuGetSuiteName() {
   # (without the .sh extension) and embedded '.'s
   # converted to '_'s
 
+  # Configure test suite name
+  if [ ! "${2}" == "" ]; then
+    jshu_suitename=${2}
+  else
+    jshu_suitename=${1}
+  fi
+
   # strip off directories
-  _jshu_script_name=${1##*/}
+  _jshu_script_name=${jshu_suitename##*/}
   # strip off ".sh"
   _jshu_base_name=${_jshu_script_name%.sh}
   # convert embedded '.' to '_'
   jshu_suite=${_jshu_base_name//./_}
   # convert embedded ' ' to '_'
   jshu_suite=${jshu_suite// /_}
+
   unset _jshu_base_name _jshu_script_name
 }
 
@@ -235,7 +244,7 @@ jshuInit() {
   if [ "${jshu_pkgname}" == "" ]; then
     jshuGetPkgName
   fi
-  jshuGetSuiteName $0
+  jshuGetSuiteName "$0" "$1"
 
   # Get rid of previous test results
   rm -f $jshu_content_file
@@ -248,7 +257,7 @@ jshuFinalize() {
   test_file="${jshu_resultDir}/TEST_${jshu_pkgname}.${jshu_suite}.xml"
   ## testsuite block
 
-  echo "<testsuite failures=\"${failed}\" errors=\"$errors\" tests=\"$tests\" skipped=\"${skipped}\" name=\"${jshu_pkgname}.${jshu_suite}\" time=\"${total}\">" >"${test_file}"
+  echo "<testsuite failures=\"${failed}\" errors=\"$errors\" tests=\"$tests\" skipped=\"${skipped}\" name=\"${jshu_pkgname}.${jshu_suitename}\" time=\"${total}\">" >"${test_file}"
   cat $jshu_content_file >>"$test_file"
   echo "</testsuite>" >>"$test_file"
   rm -f $jshu_content_file
