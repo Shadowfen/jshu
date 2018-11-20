@@ -327,14 +327,14 @@ jshuRecordResult() {
   jshu_failure_msg=""
   case ${_jshu_rr_type} in
     ${jshuPASS})
-      printf " %-69s -> PASSED\n" ${_jshu__rr_test_name}
+      printf " %-69s -> PASSED\n" "${_jshu__rr_test_name}"
       ;;
     ${jshuFAIL})
       if [ -z "$_jshu_rr_errMsg" ]; then
         _jshu_rr_errMsg="Test failure"
       fi
       jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\"></failure>"
-      printf " %-69s -> FAILED\n" ${_jshu__rr_test_name}
+      printf " %-69s -> FAILED\n" "${_jshu__rr_test_name}"
       let failed=failed+1
       ;;
     ${jshuERROR})
@@ -342,7 +342,7 @@ jshuRecordResult() {
         _jshu_rr_errMsg="Error found"
       fi
       jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\"></failure>"
-      printf " %-69s -> FAILED\n" ${_jshu__rr_test_name}
+      printf " %-69s -> FAILED\n" "${_jshu__rr_test_name}"
       let errors=errors+1
       ;;
     ${jshuFAILABORT})
@@ -350,7 +350,7 @@ jshuRecordResult() {
         _jshu_rr_errMsg="Test failure"
       fi
       jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\"></failure>"
-      printf " %-69s -> FAILED\n" ${_jshu__rr_test_name}
+      printf " %-69s -> FAILED\n" "${_jshu__rr_test_name}"
       let failed=failed+1
       ;;
     ${jshuERRORABORT})
@@ -358,7 +358,7 @@ jshuRecordResult() {
         _jshu_rr_errMsg="Error found"
       fi
       jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\"></failure>"
-      printf " %-69s -> FAILED\n" ${_jshu__rr_test_name}
+      printf " %-69s -> FAILED\n" "${_jshu__rr_test_name}"
       let errors=errors+1
       ;;
     ${jshuSKIP})
@@ -367,7 +367,7 @@ jshuRecordResult() {
       else
         jshu_failure_msg="<skipped/>"
       fi
-      printf " %-69s -> SKIPPED\n" ${_jshu__rr_test_name}
+      printf " %-69s -> SKIPPED\n" "${_jshu__rr_test_name}"
       let skipped=skipped+1
       ;;
   esac
@@ -432,6 +432,7 @@ jshu_run_test() {
   #default values
   jshu_failure_msg=""
   jshu_errmsg="" # can be overridden in the tested function
+  test_title=""  # can be overridden in the tested function
 
   #function args
   _jshu_rt_func_name=$1
@@ -440,13 +441,22 @@ jshu_run_test() {
   rm -f "${_jshu_rt_script_output}"
   >"${_jshu_rt_script_output}"
   jshuGetTestName $_jshu_rt_func_name
-  _jshu_rt_test_name=$jshu_test
 
   # run the shell function
   _jshu_rt_startTime=$(_jshuDate)
   ${_jshu_rt_func_name} &>"${_jshu_rt_script_output}"
   _jshu_result=$?
+
+  # acquire error and title outputs
+  eval $(type "${_jshu_rt_func_name}" | grep -m 1 'test_title=' | sed 's#^+* ##' || echo '')
   _jshu_rt_endTime=$(_jshuDate)
+
+  if [ ! "${test_title}" == "" ]; then
+    _jshu_rt_test_name=${test_title}
+  else
+    _jshu_rt_test_name=${jshu_test}
+    _jshu_rt_test_name=${_jshu_rt_test_name//_/ }
+  fi
 
   # look for regex in output for failure
   if [ $_jshu_result -eq 0 ]; then
@@ -459,21 +469,22 @@ jshu_run_test() {
   # figure out the result and record it
   if [ "${_jshu_rt_test_name}" == "jshuSetup" -o "${_jshu_rt_test_name}" == "jshuTeardown" ]; then
     if [ "$_jshu_result" != "0" ]; then
-      jshuRecordResult $_jshu_result ${_jshu_rt_test_name} "Failed to run ${_jshu_rt_test_name}"
+      jshuRecordResult "${_jshu_result}" "${_jshu_rt_test_name}" "Failed to run ${_jshu_rt_test_name}"
       time=$(echo "scale=3;($_jshu_rt_endTime - $_jshu_rt_startTime)/1" | bc -l)
       total=$(echo "scale=3;($total + $time)/1" | bc -l)
-      writeTestContent ${_jshu_rt_test_name} "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
+      writeTestContent "${_jshu_rt_test_name}" "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
     fi
   else
-    jshuRecordResult $_jshu_result ${_jshu_rt_test_name} "${jshu_errmsg}"
+    jshuRecordResult "${_jshu_result}" "${_jshu_rt_test_name}" "${jshu_errmsg}"
     let tests=$tests+1
     time=$(echo "scale=3;($_jshu_rt_endTime - $_jshu_rt_startTime)/1" | bc -l)
     total=$(echo "scale=3;($total + $time)/1" | bc -l)
-    writeTestContent ${_jshu_rt_test_name} "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
+    writeTestContent "${_jshu_rt_test_name}" "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
   fi
   rm -f "${_jshu_rt_script_output}"
 
   unset _jshu_rt_func_name _jshu_rt_script_output _jshu_rt_test_name
   unset _jshu_rt_startTime _jshu_rt_endTime
+  unset test_title
   return $_jshu_result
 }
