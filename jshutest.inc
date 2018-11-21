@@ -454,6 +454,7 @@ jshu_run_test() {
   _jshu_result=$?
 
   # acquire error and title outputs
+  eval $(grep -m 1 'jshu_errmsg=' "${_jshu_rt_script_output}" | sed 's#^+* ##' || echo '')
   eval $(type "${_jshu_rt_func_name}" | grep -m 1 'test_title=' | sed 's#^+* ##' || echo '')
   _jshu_rt_endTime=$(_jshuDate)
 
@@ -491,6 +492,6 @@ jshu_run_test() {
 
   unset _jshu_rt_func_name _jshu_rt_script_output _jshu_rt_test_name
   unset _jshu_rt_startTime _jshu_rt_endTime
-  unset test_title
+  unset jshu_errmsg test_title
   return $_jshu_result
 }
