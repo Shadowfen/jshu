@@ -453,6 +453,13 @@ jshu_run_test() {
   [ $? -eq 0 ]
   _jshu_result=$?
 
+  # trim the shell output
+  sed -Ei 's/\x1B\[([0-9]{0,2}(;[0-9]{1,2})?)?[mGK]//g' "${_jshu_rt_script_output}"
+  sed -Ei 's/\x1B\[[0-9]{0,4}[ABCD]//g' "${_jshu_rt_script_output}"
+  sed -Ei 's/\x1B\[\?1034h//g' "${_jshu_rt_script_output}"
+  sed -i 's/.*\x08//g' "${_jshu_rt_script_output}"
+  sed -Ei 's/\x1C//g' "${_jshu_rt_script_output}"
+
   # acquire error and title outputs
   eval $(grep -m 1 'jshu_errmsg=' "${_jshu_rt_script_output}" | sed 's#^+* ##' || echo '')
   eval $(type "${_jshu_rt_func_name}" | grep -m 1 'test_title=' | sed 's#^+* ##' || echo '')
