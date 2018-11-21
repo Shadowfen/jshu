@@ -444,7 +444,13 @@ jshu_run_test() {
 
   # run the shell function
   _jshu_rt_startTime=$(_jshuDate)
-  ${_jshu_rt_func_name} &>"${_jshu_rt_script_output}"
+  (
+    echo ''
+    set -e
+    ${_jshu_rt_func_name} 2>&1 | tee "${_jshu_rt_script_output}"
+    return ${PIPESTATUS[0]}
+  )
+  [ $? -eq 0 ]
   _jshu_result=$?
 
   # acquire error and title outputs
