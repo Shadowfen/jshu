@@ -1,5 +1,6 @@
 Version 1.0.0-19
 * Removed testcase property (assertions) that Jenkins no longer supports.
+* Limited elapsed time to 3 decimals because the Jenkins time validation is now broken.
 
 Version 1.0.0-18
 * Fixed up function ordering errors and a dangling quote.

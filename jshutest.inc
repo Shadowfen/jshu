@@ -449,15 +449,15 @@ jshu_run_test()
     if [ "${_jshu_rt_test_name}" == "jshuSetup" -o "${_jshu_rt_test_name}" == "jshuTeardown" ]; then
         if [ "$_jshu_result" != "0" ]; then
             jshuRecordResult $_jshu_result ${_jshu_rt_test_name} "Failed to run ${_jshu_rt_test_name}"
-            time=`echo "$_jshu_rt_endTime - $_jshu_rt_startTime" | bc -l`
-            total=`echo "$total + $time" | bc -l`
+            time=`echo "scale=3;($_jshu_rt_endTime - $_jshu_rt_startTime)/1" | bc -l`
+            total=`echo "scale=3;($total + $time)/1" | bc -l`
             writeTestContent ${_jshu_rt_test_name} "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
         fi
     else
         jshuRecordResult $_jshu_result ${_jshu_rt_test_name} "${jshu_errmsg}"
         let tests=$tests+1
-        time=`echo "$_jshu_rt_endTime - $_jshu_rt_startTime" | bc -l`
-        total=`echo "$total + $time" | bc -l`
+        time=`echo "scale=3;($_jshu_rt_endTime - $_jshu_rt_startTime)/1" | bc -l`
+        total=`echo "scale=3;($total + $time)/1" | bc -l`
         writeTestContent ${_jshu_rt_test_name} "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
     fi
 	rm -f "${_jshu_rt_script_output}"
