@@ -3,7 +3,7 @@
 # Simplified unit test framework for shell script which
 # produces junit-style xml results file (for Jenkins/Hudson).
 #
-# version 1.0.0-16
+# version 1.0.0-19
 #
 # Include this file into your test shellscript using ". /usr/local/include/jshutest.inc"
 # (or whatever path is appropriate to find this file).
@@ -375,7 +375,7 @@ writeTestContent()  {
 	jshuSafeContent $_jshu_wtc_outf
 	## testcase tag
 	_jshu_wtc_content="
-    <testcase assertions=\"1\" name=\"$_jshu_wtc_test_name\" time=\"$_jshu_wtc_time\">
+    <testcase name=\"$_jshu_wtc_test_name\" time=\"$_jshu_wtc_time\">
     $_jshu_wtc_fail
     <system-out>
 <![CDATA[
