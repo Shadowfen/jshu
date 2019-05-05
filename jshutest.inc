@@ -325,16 +325,17 @@ jshuRecordResult() {
   _jshu__rr_test_name=$2
   _jshu_rr_errMsg=$(jshuSafeErrMsg "$3")
   jshu_failure_msg=""
+  echo ''
   case ${_jshu_rr_type} in
     ${jshuPASS})
-      printf " %-69s -> PASSED\n" "${_jshu__rr_test_name}"
+      printf " \033[1;33m%-69s \033[1;37m-> \033[1;32mPASSED\033[0m\n" "${_jshu__rr_test_name}"
       ;;
     ${jshuFAIL})
       if [ -z "$_jshu_rr_errMsg" ]; then
         _jshu_rr_errMsg="Test failure"
       fi
       jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\"></failure>"
-      printf " %-69s -> FAILED\n" "${_jshu__rr_test_name}"
+      printf " \033[1;33m%-69s \033[1;37m-> \033[1;31mFAILED\033[0m\n" "${_jshu__rr_test_name}"
       let failed=failed+1
       ;;
     ${jshuERROR})
@@ -342,7 +343,7 @@ jshuRecordResult() {
         _jshu_rr_errMsg="Error found"
       fi
       jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\"></failure>"
-      printf " %-69s -> FAILED\n" "${_jshu__rr_test_name}"
+      printf " \033[1;33m%-69s \033[1;37m-> \033[1;31mFAILED\033[0m\n" "${_jshu__rr_test_name}"
       let errors=errors+1
       ;;
     ${jshuFAILABORT})
@@ -350,7 +351,7 @@ jshuRecordResult() {
         _jshu_rr_errMsg="Test failure"
       fi
       jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\"></failure>"
-      printf " %-69s -> FAILED\n" "${_jshu__rr_test_name}"
+      printf " \033[1;33m%-69s \033[1;37m-> \033[1;31mFAILED\033[0m\n" "${_jshu__rr_test_name}"
       let failed=failed+1
       ;;
     ${jshuERRORABORT})
@@ -358,7 +359,7 @@ jshuRecordResult() {
         _jshu_rr_errMsg="Error found"
       fi
       jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\"></failure>"
-      printf " %-69s -> FAILED\n" "${_jshu__rr_test_name}"
+      printf " \033[1;33m%-69s \033[1;37m-> \033[1;31mFAILED\033[0m\n" "${_jshu__rr_test_name}"
       let errors=errors+1
       ;;
     ${jshuSKIP})
@@ -367,7 +368,7 @@ jshuRecordResult() {
       else
         jshu_failure_msg="<skipped/>"
       fi
-      printf " %-69s -> SKIPPED\n" "${_jshu__rr_test_name}"
+      printf " \033[1;33m%-69s \033[1;37m-> \033[1;36mSKIPPED\033[0m\n" "${_jshu__rr_test_name}"
       let skipped=skipped+1
       ;;
   esac
