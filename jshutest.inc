@@ -170,9 +170,7 @@ jshuGetPkgName() {
     _jshu_curdir=${_jshu_curdir%/*}
     _jshu_parentdir=${_jshu_curdir##*/}
   fi
-  jshu_pkgname=${_jshu_parentdir//./_}
-  # convert embedded ' ' to '_'
-  jshu_pkgname=${jshu_pkgname// /_}
+  jshu_pkgname=${_jshu_parentdir}
   unset _jshu_curdir _jshu_parentdir
 }
 
@@ -254,7 +252,12 @@ jshuInit() {
 
 # Write up the tests result file
 jshuFinalize() {
-  test_file="${jshu_resultDir}/TEST_${jshu_pkgname}.${jshu_suite}.xml"
+  jshu_filename=${jshu_pkgname//./_}
+  jshu_filename=${jshu_filename// /_}
+  jshu_filename="TEST_${jshu_filename}.${jshu_suite}.xml"
+  jshu_filename=$(echo "${jshu_filename}" | sed 's/\xC3\(\xA0\|\xA2\)/a/g;s/\xC3\(\xA8\|\xA9\|\xAA\|\xAB\)/e/g;s/\xC3\(\xB9\|\xBC\)/u/g')
+  tests_file="${jshu_resultDir}/${jshu_filename}"
+
   ## testsuite block
 
   echo "<testsuite failures=\"${failed}\" errors=\"$errors\" tests=\"$tests\" skipped=\"${skipped}\" name=\"${jshu_pkgname}.${jshu_suitename}\" time=\"${total}\">" >"${test_file}"
