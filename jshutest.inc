@@ -254,7 +254,7 @@ jshuInit() {
 jshuFinalize() {
   jshu_filename=${jshu_pkgname//./_}
   jshu_filename=${jshu_filename// /_}
-  jshu_filename="TEST_${jshu_filename}.${jshu_suite}.xml"
+  jshu_filename="Tests.${jshu_filename}.${jshu_suite}.xml"
   jshu_filename=$(echo "${jshu_filename}" | sed 's/\xC3\(\xA0\|\xA2\)/a/g;s/\xC3\(\xA8\|\xA9\|\xAA\|\xAB\)/e/g;s/\xC3\(\xB9\|\xBC\)/u/g')
   tests_file="${jshu_resultDir}/${jshu_filename}"
 
