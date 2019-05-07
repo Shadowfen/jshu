@@ -269,6 +269,7 @@ jshuFinalize() {
   echo "-- Number of tests         = ${tests}"
   echo "-- Number of skipped tests = ${skipped}"
   echo "-- Number of failing tests = ${totfail}"
+  return "${totfail}"
 }
 
 jshuRunTests() {
