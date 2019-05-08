@@ -228,11 +228,11 @@ jshuInit() {
   _jshu_blddir=$(pwd)
   if [ -z ${BUILDDIR+x} ]; then
     # BUILDDIR is unset
-    jshu_resultDir=${_jshu_blddir}/results
+    jshu_resultDir=${_jshu_blddir}/results/xunit
   else
     # BUILDDIR is set
     _jshu_blddir=$BUILDDIR
-    jshu_resultDir=${_jshu_blddir}/results
+    jshu_resultDir=${_jshu_blddir}/results/xunit
   fi
   # create output folder
   mkdir -p "$jshu_resultDir"
