@@ -237,6 +237,9 @@ jshuInit() {
   # create output folder
   mkdir -p "$jshu_resultDir"
 
+  # Store test suite start time
+  jshu_ts_startTime=$(_jshuDate)
+
   # Set values for package name and suite name
   # for reporting
   if [ "${jshu_pkgname}" == "" ]; then
@@ -257,18 +260,27 @@ jshuFinalize() {
   jshu_filename="Tests.${jshu_filename}.${jshu_suite}.xml"
   jshu_filename=$(echo "${jshu_filename}" | sed 's/\xC3\(\xA0\|\xA2\)/a/g;s/\xC3\(\xA8\|\xA9\|\xAA\|\xAB\)/e/g;s/\xC3\(\xB9\|\xBC\)/u/g')
   tests_file="${jshu_resultDir}/${jshu_filename}"
+  tests_hostname=${HOSTNAME}
+  tests_timestamp=$(date -u +%FT%TZ -d @"${jshu_ts_startTime%.}")
 
   ## testsuite block
+  {
+    echo '<?xml version="1.0" encoding="UTF-8" ?>'
+    echo "<testsuite failures=\"${failed}\" errors=\"$errors\" tests=\"$tests\" skipped=\"${skipped}\" name=\"${jshu_pkgname}.${jshu_suitename}\" hostname=\"${tests_hostname}\" time=\"${total}\" timestamp=\"${tests_timestamp}\">"
+    cat "${jshu_content_file}"
+    echo "</testsuite>"
+  } >"${tests_file}"
+  rm -f "${jshu_content_file}"
 
-  echo "<testsuite failures=\"${failed}\" errors=\"$errors\" tests=\"$tests\" skipped=\"${skipped}\" name=\"${jshu_pkgname}.${jshu_suitename}\" time=\"${total}\">" >"${test_file}"
-  cat $jshu_content_file >>"$test_file"
-  echo "</testsuite>" >>"$test_file"
-  rm -f $jshu_content_file
-  echo
+  echo ''
   let totfail=errors+failed
   echo "-- Number of tests         = ${tests}"
   echo "-- Number of skipped tests = ${skipped}"
   echo "-- Number of failing tests = ${totfail}"
+  echo ''
+
+  unset jshu_ts_startTime
+
   return "${totfail}"
 }
 
@@ -291,9 +303,9 @@ jshuRunTests() {
       fi
     else
       # named function does not exist - now what?
-      jshuRecordResult $jshuFAIL $t "Failed to run $t - test function does not exist"
+      jshuRecordResult "${jshuFAIL}" "${t}" "Failed to run ${t} - test function does not exist" ''
       touch /var/tmp/jshut_$$
-      writeTestContent $t "0" "Test function does not exist in script" /var/tmp/jshut_$$
+      writeTestContent "${t}" '0' 'Test function does not exist in script' '' /var/tmp/jshut_$$
       rm -f /var/tmp/jshut_$$
     fi
   done
@@ -329,6 +341,7 @@ jshuRecordResult() {
   _jshu__rr_test_name=$2
   _jshu_rr_errMsg=$(jshuSafeErrMsg "$3")
   jshu_failure_msg=""
+  jshu_failure_end=""
   echo ''
   case ${_jshu_rr_type} in
     ${jshuPASS})
@@ -338,7 +351,8 @@ jshuRecordResult() {
       if [ -z "$_jshu_rr_errMsg" ]; then
         _jshu_rr_errMsg="Test failure"
       fi
-      jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\"></failure>"
+      jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\">"
+      jshu_failure_end='</failure>'
       printf " \033[1;33m%-69s \033[1;37m-> \033[1;31mFAILED\033[0m\n" "${_jshu__rr_test_name}"
       let failed=failed+1
       ;;
@@ -346,7 +360,8 @@ jshuRecordResult() {
       if [ -z "$_jshu_rr_errMsg" ]; then
         _jshu_rr_errMsg="Error found"
       fi
-      jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\"></failure>"
+      jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\">"
+      jshu_failure_end='</failure>'
       printf " \033[1;33m%-69s \033[1;37m-> \033[1;31mFAILED\033[0m\n" "${_jshu__rr_test_name}"
       let errors=errors+1
       ;;
@@ -354,7 +369,8 @@ jshuRecordResult() {
       if [ -z "$_jshu_rr_errMsg" ]; then
         _jshu_rr_errMsg="Test failure"
       fi
-      jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\"></failure>"
+      jshu_failure_msg="<failure type=\"failure\" message=\"${_jshu_rr_errMsg}\">"
+      jshu_failure_end='</failure>'
       printf " \033[1;33m%-69s \033[1;37m-> \033[1;31mFAILED\033[0m\n" "${_jshu__rr_test_name}"
       let failed=failed+1
       ;;
@@ -362,15 +378,18 @@ jshuRecordResult() {
       if [ -z "$_jshu_rr_errMsg" ]; then
         _jshu_rr_errMsg="Error found"
       fi
-      jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\"></failure>"
+      jshu_failure_msg="<failure type=\"error\" message=\"${_jshu_rr_errMsg}\">"
+      jshu_failure_end='</failure>'
       printf " \033[1;33m%-69s \033[1;37m-> \033[1;31mFAILED\033[0m\n" "${_jshu__rr_test_name}"
       let errors=errors+1
       ;;
     ${jshuSKIP})
       if [ ! -z "$_jshu_rr_errMsg" ]; then
-        jshu_failure_msg="<skipped message=\"${_jshu_rr_errMsg}\"></skipped>"
+        jshu_failure_msg="<skipped message=\"${_jshu_rr_errMsg}\">"
+        jshu_failure_end='</skipped>'
       else
         jshu_failure_msg="<skipped/>"
+        jshu_failure_end=''
       fi
       printf " \033[1;33m%-69s \033[1;37m-> \033[1;36mSKIPPED\033[0m\n" "${_jshu__rr_test_name}"
       let skipped=skipped+1
@@ -384,27 +403,46 @@ jshuRecordResult() {
 writeTestContent() {
   _jshu_wtc_test_name=$1
   _jshu_wtc_time=$2
-  _jshu_wtc_fail=$3
-  _jshu_wtc_outf=$4
+  _jshu_wtc_failure_msg=$3
+  _jshu_wtc_failure_end=$4
+  _jshu_wtc_outf=$5
   if [ -e $_jshu_wtc_outf ]; then
     _jshu_wtc_out=$(<$_jshu_wtc_outf)
   else
     _jshu_wtc_out="No such file ($_jshu_wtc_outf) found. Could not read test output."
   fi
   jshuSafeContent $_jshu_wtc_outf
-  ## testcase tag
-  _jshu_wtc_content="
-    <testcase name=\"$_jshu_wtc_test_name\" time=\"$_jshu_wtc_time\">
-    $_jshu_wtc_fail
+
+  # testcase tag
+  cat >>"${jshu_content_file}" <<EOF
+  <testcase name="${_jshu_wtc_test_name}" time="${_jshu_wtc_time}">
+EOF
+
+  # failure log
+  if [ ! -z "${_jshu_wtc_failure_msg}" ]; then
+    cat >>"${jshu_content_file}" <<EOF
+    ${_jshu_wtc_failure_msg}
+EOF
+    if [ ! -z "${_jshu_wtc_failure_msg}" ]; then
+      cat >>"${jshu_content_file}" <<EOF
+<![CDATA[
+${_jshu_wtc_out}
+]]>
+    ${_jshu_wtc_failure_end}
+EOF
+    fi
+  fi
+
+  # testcase output
+  cat >>"${jshu_content_file}" <<EOF
     <system-out>
 <![CDATA[
-$_jshu_wtc_out
+${_jshu_wtc_out}
 ]]>
     </system-out>
-    </testcase>
-  "
-  echo "$_jshu_wtc_content" >>$jshu_content_file
-  unset _jshu_wtc_test_name _jshu_wtc_time _jshu_wtc_fail _jshu_wtc_outf _jshu_wtc_out _jshu_wtc_content
+  </testcase>
+EOF
+  unset _jshu_wtc_test_name _jshu_wtc_time _jshu_wtc_failure_msg _jshu_wtc_failure_end _jshu_wtc_outf _jshu_wtc_out
 }
 
 # Extract from script list of functions to run tests against.
@@ -436,6 +474,7 @@ jshuExtractTestFunctions() {
 jshu_run_test() {
   #default values
   jshu_failure_msg=""
+  jshu_failure_end=""
   jshu_errmsg="" # can be overridden in the tested function
   test_title=""  # can be overridden in the tested function
 
@@ -488,17 +527,17 @@ jshu_run_test() {
   # figure out the result and record it
   if [ "${_jshu_rt_test_name}" == "jshuSetup" -o "${_jshu_rt_test_name}" == "jshuTeardown" ]; then
     if [ "$_jshu_result" != "0" ]; then
-      jshuRecordResult "${_jshu_result}" "${_jshu_rt_test_name}" "Failed to run ${_jshu_rt_test_name}"
+      jshuRecordResult "${_jshu_result}" "${_jshu_rt_test_name}" "Failed to run ${_jshu_rt_test_name}" "${_jshu_rt_script_output}"
       time=$(echo "scale=3;($_jshu_rt_endTime - $_jshu_rt_startTime)/1" | bc -l)
       total=$(echo "scale=3;($total + $time)/1" | bc -l)
-      writeTestContent "${_jshu_rt_test_name}" "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
+      writeTestContent "${_jshu_rt_test_name}" "${time}" "${jshu_failure_msg}" "${jshu_failure_end}" "${_jshu_rt_script_output}"
     fi
   else
-    jshuRecordResult "${_jshu_result}" "${_jshu_rt_test_name}" "${jshu_errmsg}"
+    jshuRecordResult "${_jshu_result}" "${_jshu_rt_test_name}" "${jshu_errmsg}" "${_jshu_rt_script_output}"
     let tests=$tests+1
     time=$(echo "scale=3;($_jshu_rt_endTime - $_jshu_rt_startTime)/1" | bc -l)
     total=$(echo "scale=3;($total + $time)/1" | bc -l)
-    writeTestContent "${_jshu_rt_test_name}" "${time}" "${jshu_failure_msg}" "${_jshu_rt_script_output}"
+    writeTestContent "${_jshu_rt_test_name}" "${time}" "${jshu_failure_msg}" "${jshu_failure_end}" "${_jshu_rt_script_output}"
   fi
   rm -f "${_jshu_rt_script_output}"
 
