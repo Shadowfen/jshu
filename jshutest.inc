@@ -274,6 +274,7 @@ jshuFinalize() {
 
   echo ''
   let totfail=errors+failed
+  echo "-- Duration of tests       = ${total} seconds"
   echo "-- Number of tests         = ${tests}"
   echo "-- Number of skipped tests = ${skipped}"
   echo "-- Number of failing tests = ${totfail}"
