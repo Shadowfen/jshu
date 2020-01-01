@@ -2,7 +2,7 @@
 
 # increment_build.sh
 #
-# This script allows for simple maintenance of an informational text 
+# This script allows for simple maintenance of an informational text
 # file containing information useful for specification in an rpm spec file.
 #
 # For example, one such file might contain:
@@ -16,7 +16,7 @@
 #
 # The BUILDNUM_TXT variable (below) has the name of your buildnumber.txt
 # file (including any necessary directory info). If the
-# BUILDNUM_TXT file does not exist, it will be created 
+# BUILDNUM_TXT file does not exist, it will be created
 # with dummy values. You can then edit the BUILDNUM_TXT
 # file to provide product and package names, etc.
 #
@@ -46,7 +46,7 @@
 #
 # One way you can use this is in the Makefile where you
 # build your rpm. Define the following to get access to
-# the values (add directory info to "buildnumber.txt" 
+# the values (add directory info to "buildnumber.txt"
 # if necessary):
 #   PRODNAME = $(shell /bin/grep ^ProductName: buildnumber.txt | /bin/cut -d: -f2)
 #   PKGNAME = $(shell /bin/grep ^PkgName: buildnumber.txt | /bin/awk '{print $$2}')
@@ -106,185 +106,182 @@ BUILDNUM_TXT=./buildnumber.txt
 #    PRODNAME, PKGNAME, VERSION, BUILDNUM, EPOCH,
 #    BUILDHOST, BUILDDATE
 
-
-
 # get the name of the buildnumber file to use
 getBldNumFilename() {
-	if [ $# -lt 1 ] ; then
-		filename="buildnumber.txt"
-	else
-		filename="$1"
-	fi
-	if [ ! -n "$filename" ] ; then
-		filename="buildnumber.txt"
-	fi
-	echo $filename
-	unset filename
+  if [ $# -lt 1 ]; then
+    filename="buildnumber.txt"
+  else
+    filename="$1"
+  fi
+  if [ ! -n "$filename" ]; then
+    filename="buildnumber.txt"
+  fi
+  echo $filename
+  unset filename
 }
 
 writeBldNumFile() {
-	filename="$1"
-	
-	echo "ProductName:$PRODNAME" >"${filename}"
-	echo "PkgName: $PKGNAME" >>"${filename}"
-	if [ -n "$VERSION_MINOR" ] ; then
-		ver="$VERSION_SUPER.$VERSION_MAJOR.$VERSION_MINOR"
-	else
-		ver="$VERSION_SUPER.$VERSION_MAJOR"
-	fi
-	echo "Version: $ver" >>"${filename}"
-	echo "BuildNumber: $BUILDNUM" >>"${filename}"
-	echo "Epoch: $EPOCH" >>"${filename}"
-	echo "BuildHost: $BUILDHOST" >>"${filename}"
-	echo "Date: $BUILDDATE" >>"${filename}"
-	unset filename ver
+  filename="$1"
+
+  echo "ProductName:$PRODNAME" >"${filename}"
+  echo "PkgName: $PKGNAME" >>"${filename}"
+  if [ -n "$VERSION_MINOR" ]; then
+    ver="$VERSION_SUPER.$VERSION_MAJOR.$VERSION_MINOR"
+  else
+    ver="$VERSION_SUPER.$VERSION_MAJOR"
+  fi
+  echo "Version: $ver" >>"${filename}"
+  echo "BuildNumber: $BUILDNUM" >>"${filename}"
+  echo "Epoch: $EPOCH" >>"${filename}"
+  echo "BuildHost: $BUILDHOST" >>"${filename}"
+  echo "Date: $BUILDDATE" >>"${filename}"
+  unset filename ver
 }
 
-
 parseVersion() {
-	VERSION_SUPER=${VERSION%%.*}
-	VERSION_MINOR=${VERSION##*.}
-	vermajmin=${VERSION#*.}
-	VERSION_MAJOR=${vermajmin%.*}
-	if [ "$vermajmin" = "$VERSION_MAJOR" ] ; then
-		# we don't actually HAVE a minor version
-		VERSION_MINOR=""
-	fi
+  VERSION_SUPER=${VERSION%%.*}
+  VERSION_MINOR=${VERSION##*.}
+  vermajmin=${VERSION#*.}
+  VERSION_MAJOR=${vermajmin%.*}
+  if [ "$vermajmin" = "$VERSION_MAJOR" ]; then
+    # we don't actually HAVE a minor version
+    VERSION_MINOR=""
+  fi
 }
 
 # only creates a file if it does not already exist!!
 # will not overwrite an existing file
 createBldNumFile() {
-	filename="$1"
-	if [ ! -n "$filename" ] ; then
-		return 1
-	fi
-	if [ ! -e "$filename" ] ; then
-		/bin/echo "Could not find $filename"
-		BLDIR=${filename%/*}
-		if [ "$BLDIR" != "$filename" ] ; then
-			if [ ! -d $BLDIR ]; then
-				echo "$BLDIR directory does not exist... aborting" >&2
-				return 1
-			fi
-		fi
-		/bin/echo "   Creating it."
-		PRODNAME=" Unknown product" # yes, the initial space is deliberate
-		PKGNAME="unknown_pkg"
-		VERSION="0.0.0"
-		parseVersion
-		BUILDNUM="0"
-		EPOCH="0"
-		BUILDHOST=`/bin/uname -a | /bin/awk '{ print $2}'`
-		BUILDDATE=`/bin/date`
-		writeBldNumFile "$filename"
-	fi
-	unset filename
+  filename="$1"
+  if [ ! -n "$filename" ]; then
+    return 1
+  fi
+  if [ ! -e "$filename" ]; then
+    /bin/echo "Could not find $filename"
+    BLDIR=${filename%/*}
+    if [ "$BLDIR" != "$filename" ]; then
+      if [ ! -d $BLDIR ]; then
+        echo "$BLDIR directory does not exist... aborting" >&2
+        return 1
+      fi
+    fi
+    /bin/echo "   Creating it."
+    PRODNAME=" Unknown product" # yes, the initial space is deliberate
+    PKGNAME="unknown_pkg"
+    VERSION="0.0.0"
+    parseVersion
+    BUILDNUM="0"
+    EPOCH="0"
+    BUILDHOST=$(/bin/uname -a | /bin/awk '{ print $2}')
+    BUILDDATE=$(/bin/date)
+    writeBldNumFile "$filename"
+  fi
+  unset filename
 }
 
 loadBldNumFile() {
-	filename="$1"
-	if [ ! -e "$filename" ] ; then
-		return 1
-	fi
+  filename="$1"
+  if [ ! -e "$filename" ]; then
+    return 1
+  fi
 
-	PRODNAME=`/bin/grep ^ProductName "$filename" | /bin/cut -d: -f2`
-	PKGNAME=`/bin/grep ^PkgName "$filename" | /bin/awk '{print $2}'`
-	VERSION=`/bin/grep ^Version "$filename" | /bin/awk '{print $2}'`
-	BUILDNUM=`/bin/grep ^BuildNumber "$filename" | /bin/awk '{print $2}'`
-	EPOCH=`/bin/grep "^Epoch" "$filename" | /bin/awk '{print $2}'`
-	unset filename
+  PRODNAME=$(/bin/grep ^ProductName "$filename" | /bin/cut -d: -f2)
+  PKGNAME=$(/bin/grep ^PkgName "$filename" | /bin/awk '{print $2}')
+  VERSION=$(/bin/grep ^Version "$filename" | /bin/awk '{print $2}')
+  BUILDNUM=$(/bin/grep ^BuildNumber "$filename" | /bin/awk '{print $2}')
+  EPOCH=$(/bin/grep "^Epoch" "$filename" | /bin/awk '{print $2}')
+  unset filename
 }
 
 incrSuper() {
-	echo -e "\nIncrementing version super...\n"
-	let VERSION_SUPER=$VERSION_SUPER+1
-	VERSION_MAJOR=0
-	VERSION_MINOR=0
-	let BUILDNUM=1
-	let EPOCH=$EPOCH+1
+  echo -e "\nIncrementing version super...\n"
+  let VERSION_SUPER=$VERSION_SUPER+1
+  VERSION_MAJOR=0
+  VERSION_MINOR=0
+  let BUILDNUM=1
+  let EPOCH=$EPOCH+1
 }
 
 incrMajor() {
-	echo -e "\nIncrementing version major...\n"
-	let VERSION_MAJOR=$VERSION_MAJOR+1
-	VERSION_MINOR=0
-	let BUILDNUM=1
-	let EPOCH=$EPOCH+1
+  echo -e "\nIncrementing version major...\n"
+  let VERSION_MAJOR=$VERSION_MAJOR+1
+  VERSION_MINOR=0
+  let BUILDNUM=1
+  let EPOCH=$EPOCH+1
 }
 
 incrMinor() {
-	set -x -a -v
-	echo -e "\nIncrementing version minor...\n"
-	if [ -z "VERSION_MINOR" ]; then
-		VERSION_MINOR=0
-	else
-		let VERSION_MINOR=$VERSION_MINOR+1
-	fi
-	let BUILDNUM=1
-	let EPOCH=$EPOCH+1
-	set +x +a +v
+  set -x -a -v
+  echo -e "\nIncrementing version minor...\n"
+  if [ -z "VERSION_MINOR" ]; then
+    VERSION_MINOR=0
+  else
+    let VERSION_MINOR=$VERSION_MINOR+1
+  fi
+  let BUILDNUM=1
+  let EPOCH=$EPOCH+1
+  set +x +a +v
 }
 
 incrBuild() {
-	echo -e "\nIncrementing build number...\n";
-	let BUILDNUM=$BUILDNUM+1
-	let EPOCH=$EPOCH+1
+  echo -e "\nIncrementing build number...\n"
+  let BUILDNUM=$BUILDNUM+1
+  let EPOCH=$EPOCH+1
 }
 
 usage() {
-	echo -e "USAGE:\n\t$0 super|major|minor|build [alternate buildnumber.txt file]"
+  echo -e "USAGE:\n\t$0 super|major|minor|build [alternate buildnumber.txt file]"
 }
 #############################################################################################
 # main
 #    (Only execute the following if we were called by our real name - i.e. as a
 #     main script. Otherwise assume we've been sourced for testing of the functions.)
 #
-if [ ${0##*/} == "increment_build.sh" ] ; then
-	echo $@
+if [ ${0##*/} == "increment_build.sh" ]; then
+  echo $@
 
-	if [ -z "$1" ] || [ "$1" != "major" ] \
-		&& [ "$1" != "minor" ] && [ "$1" != "build" ]\
-		&& [ "$1" != "super" ]; then
-		/bin/echo -e "\nERROR!  Invalid or missing parameter."
-		usage
-		exit 1
-	fi
-	opt="$1"
-	if [ $# -lt 2 ]; then
-		BUILDNUM_TXT=$(getBldNumFilename)
-	else
-		BUILDNUM_TXT=$(getBldNumFilename $2)
-	fi
-	createBldNumFile $BUILDNUM_TXT
-	loadBldNumFile $BUILDNUM_TXT
-	
-	VERSION_SUPER=${VERSION%%.*}
-	VERSION_MINOR=${VERSION##*.}
-	vertmp=${VERSION#*.}
-	VERSION_MAJOR=${vertmp%.*}
-	case $opt in
-	"super") 
-		incrSuper
-		;;
-	"major")
-		incrMajor
-		;;
-	"minor")
-		incrMinor
-		;;
-	"build")
-		incrBuild
-		;;
-	*)
-		echo "ERROR: Unknown option \"$opt\""
-		usage
-		exit 1
-		;;
-	esac
+  if [ -z "$1" ] || [ "$1" != "major" ] \
+    && [ "$1" != "minor" ] && [ "$1" != "build" ] \
+    && [ "$1" != "super" ]; then
+    /bin/echo -e "\nERROR!  Invalid or missing parameter."
+    usage
+    exit 1
+  fi
+  opt="$1"
+  if [ $# -lt 2 ]; then
+    BUILDNUM_TXT=$(getBldNumFilename)
+  else
+    BUILDNUM_TXT=$(getBldNumFilename $2)
+  fi
+  createBldNumFile $BUILDNUM_TXT
+  loadBldNumFile $BUILDNUM_TXT
 
-	BUILDHOST=`/bin/uname -a | /bin/awk '{ print $2}'`
-	BUILDDATE=`/bin/date`
-	
-	writeBldNumFile ${BUILDNUM_TXT}
+  VERSION_SUPER=${VERSION%%.*}
+  VERSION_MINOR=${VERSION##*.}
+  vertmp=${VERSION#*.}
+  VERSION_MAJOR=${vertmp%.*}
+  case $opt in
+    "super")
+      incrSuper
+      ;;
+    "major")
+      incrMajor
+      ;;
+    "minor")
+      incrMinor
+      ;;
+    "build")
+      incrBuild
+      ;;
+    *)
+      echo "ERROR: Unknown option \"$opt\""
+      usage
+      exit 1
+      ;;
+  esac
+
+  BUILDHOST=$(/bin/uname -a | /bin/awk '{ print $2}')
+  BUILDDATE=$(/bin/date)
+
+  writeBldNumFile ${BUILDNUM_TXT}
 fi
