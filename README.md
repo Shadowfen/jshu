@@ -15,3 +15,11 @@ build numbers in a text file and two different test scripts for it:
     have been tested elsewhere and we now wish to test the operation of the script
     as a whole. Thus, this script provides increment_build.sh with data, runs it,
     and evaluates the resultant data after execution is done.
+
+* wrapper_multipleTest.sh - This test script demonstrates the usage of the JSHU wrapper
+    upon multiple individual and documented tests, resulting in a single xml file,
+    with minimal API interfaces for external projects.
+
+* wrapper_multipleTest.sh - This test script demonstrates the usage of the JSHU wrapper
+    on standalone individual tests, resulting in multiple xml files,
+    with minimal API interfaces for external projects.
