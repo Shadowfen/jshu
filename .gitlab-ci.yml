@@ -1,5 +1,19 @@
 stages:
+  - package
   - test
+
+rpm:
+  stage: package
+  image: centos:7.6.1810
+  before_script:
+    - yum install -y rpm-build
+  script:
+    - mkdir -p ./build
+    - rpmbuild --define="%_topdir ${PWD}/build"  --define "%_sourcedir ${PWD}" -bb rpm.spec
+    - yum --disablerepo '*' install -y ./build/RPMS/noarch/*.rpm
+  artifacts:
+    paths:
+      - build/RPMS/noarch/
 
 test:
   stage: test
