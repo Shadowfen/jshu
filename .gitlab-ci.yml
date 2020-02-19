@@ -18,6 +18,7 @@ test:
     - bash -c 'cd ./tests/ && bash ./fail_adhocFunctionNamesTest.sh'
     - bash -c 'cd ./tests/ && bash ./fail_jshuSetupTest.sh; [ ${?} -eq 1 ]'
     - bash -c 'cd ./tests/ && bash ./fail_jshuTeardownTest.sh; [ ${?} -eq 1 ]'
+    - bash -c 'cd ./tests/ && bash ./wrapper_unfinishedTest.sh'
   artifacts:
     paths:
       - sample/results/xunit/
