@@ -2,6 +2,21 @@ stages:
   - package
   - test
 
+apk:
+  stage: package
+  image: alpine:3
+  script:
+    - apk add alpine-sdk
+    - abuild-keygen -a </dev/null
+    - abuild -F checksum
+    - abuild -F
+    - mkdir -p ./build/
+    - cp -fv /root/packages/*/*/jshu-*.apk ./build/
+    - apk add --allow-untrusted ./build/jshu-*.apk
+  artifacts:
+    paths:
+      - ./build/jshu-*.apk
+
 rpm:
   stage: package
   image: centos:7.6.1810
