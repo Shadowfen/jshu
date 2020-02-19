@@ -247,6 +247,23 @@ jshuInit() {
   fi
   jshuGetSuiteName "$0" "$1"
 
+  # Prepare JSHU result filename
+  jshu_filename=${jshu_pkgname//./_}
+  jshu_filename=${jshu_filename// /_}
+  jshu_filename="Tests.${jshu_filename}.${jshu_suite}.xml"
+  jshu_filename=$(echo "${jshu_filename}" | sed 's/\xC3\(\xA0\|\xA2\)/a/g;s/\xC3\(\xA8\|\xA9\|\xAA\|\xAB\)/e/g;s/\xC3\(\xB9\|\xBC\)/u/g')
+
+  # Prepare faulty initial result
+  {
+    echo '<?xml version="1.0" encoding="UTF-8" ?>'
+    echo "<testsuite failures=\"1\" errors=\"0\" tests=\"1\" skipped=\"0\" name=\"${jshu_pkgname}.${jshu_suitename}\">"
+    echo "  <testcase name=\"${jshu_pkgname}.${jshu_suitename}\">"
+    echo "    <failure type=\"failure\" message=\"Test failure\">"
+    echo "    </failure>"
+    echo '  </testcase>'
+    echo "</testsuite>"
+  } >"${jshu_resultDir}/${jshu_filename}"
+
   # Get rid of previous test results
   rm -f $jshu_content_file
   >$jshu_content_file
@@ -259,7 +276,6 @@ jshuFinalize() {
   jshu_filename=${jshu_filename// /_}
   jshu_filename="Tests.${jshu_filename}.${jshu_suite}.xml"
   jshu_filename=$(echo "${jshu_filename}" | sed 's/\xC3\(\xA0\|\xA2\)/a/g;s/\xC3\(\xA8\|\xA9\|\xAA\|\xAB\)/e/g;s/\xC3\(\xB9\|\xBC\)/u/g')
-  tests_file="${jshu_resultDir}/${jshu_filename}"
   tests_hostname=${HOSTNAME}
   tests_timestamp=$(date -u +%FT%TZ -d @"${jshu_ts_startTime%.}")
 
@@ -269,7 +285,7 @@ jshuFinalize() {
     echo "<testsuite failures=\"${failed}\" errors=\"$errors\" tests=\"$tests\" skipped=\"${skipped}\" name=\"${jshu_pkgname}.${jshu_suitename}\" hostname=\"${tests_hostname}\" time=\"${total}\" timestamp=\"${tests_timestamp}\">"
     cat "${jshu_content_file}"
     echo "</testsuite>"
-  } >"${tests_file}"
+  } >"${jshu_resultDir}/${jshu_filename}"
   rm -f "${jshu_content_file}"
 
   echo ''
