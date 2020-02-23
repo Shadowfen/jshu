@@ -21,9 +21,9 @@ case "${1}" in
 
   # Start tests
   if [ ! -z "${WORKSPACE}" ] && [ -z "${BUILDDIR}" ]; then
-    BUILDDIR=${WORKSPACE} jshuInit "${3}"
+    BUILDDIR=${WORKSPACE} jshuInit "${3}" "${4}"
   else
-    jshuInit "${3}"
+    jshuInit "${3}" "${4}"
   fi
 
   # Declare Test function
@@ -62,13 +62,12 @@ END_OF_TEST
 
 # Test mode
 --test)
-  # Load jshu wrapper
-  source "${jshu}/wrapper.sh" --load "${2}" "${3}"
-
-  # Add test name to the file name
+  # Prepare test name for file name
   jshu_test_tag=${4//./_}
   jshu_test_tag=${jshu_test_tag// /_}
-  jshu_suite=${jshu_suite}.${jshu_test_tag}
+
+  # Load jshu wrapper
+  source "${jshu}/wrapper.sh" --load "${2}" "${3}" "${jshu_test_tag}"
 
   # Run single test
   Test "${4}" <<§

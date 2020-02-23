@@ -247,6 +247,11 @@ jshuInit() {
   fi
   jshuGetSuiteName "$0" "$1"
 
+  # Append test tag to suite name
+  if [ ! -z "${2}" ]; then
+    jshu_suite="${jshu_suite}.${2}"
+  fi
+
   # Prepare JSHU result filename
   jshu_filename=${jshu_pkgname//./_}
   jshu_filename=${jshu_filename// /_}
