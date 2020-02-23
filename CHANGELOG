@@ -12,6 +12,8 @@ Version 1.0.0-20
 * Implement optional "test_title" variable in test
 * Support passing a formatted tests suite name
 * Apply shfmt formatting Bash codestyle to all files
+* Enforce faulty result file before proper jshuFinalize call
+* Support wrapper.sh --test handlings with enforced failures
 
 Version 1.0.0-19
 * Removed testcase property (assertions) that Jenkins no longer supports.
