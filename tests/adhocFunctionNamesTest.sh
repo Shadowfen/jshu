@@ -1,33 +1,31 @@
-#!/bin/bash 
+#!/bin/bash
 
 # source the unit test for scripts functions
 . ../jshutest.inc
 
 jshuSetup() {
-    # set this variable to a space-delimited list of function names
-    # that you want to run as tests.
-    jshuTestFunctions="AlwaysPass AlwaysPass2"
+  # set this variable to a space-delimited list of function names
+  # that you want to run as tests.
+  jshuTestFunctions="AlwaysPass AlwaysPass2"
 }
 
 jshuTeardown() {
-    return 0
+  return 0
 }
 
 ##############################################################
 # unit test functions
 AlwaysPass() {
-	return ${jshuPASS}
+  return ${jshuPASS}
 }
 
 AlwaysPass2() {
-	return ${jshuPASS}
+  return ${jshuPASS}
 }
 
 NormalFuncNameTest() {
-    return ${jshuPASS}
+  return ${jshuPASS}
 }
-
-
 
 ##############################################################
 # main

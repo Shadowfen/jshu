@@ -1,3 +1,20 @@
+Version 1.0.0-20
+* Add tests duration in tests reports
+* Use the results/xunit path for XML results
+* Refactor XML with timestamps, failures, hostname
+* Return error level in finish steps
+* Use 'Tests.*' naming for XML result files
+* Always adapt the package name to a file name
+* Improve tests outputs with colors and spacing
+* Trim extended and colored chars from execution outputs
+* Extract jshu_errmsg and test_title from the output
+* Handle errors inside test functions and verbose output
+* Implement optional "test_title" variable in test
+* Support passing a formatted tests suite name
+* Apply shfmt formatting Bash codestyle to all files
+* Enforce faulty result file before proper jshuFinalize call
+* Support wrapper.sh --test handlings with enforced failures
+
 Version 1.0.0-19
 * Removed testcase property (assertions) that Jenkins no longer supports.
 * Limited elapsed time to 3 decimals because the Jenkins time validation is now broken.

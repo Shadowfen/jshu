@@ -1,24 +1,21 @@
-#!/bin/bash 
+#!/bin/bash
 
 # source the unit test for scripts functions
 . ../jshutest.inc
 
 jshuSetup() {
-    return 0
+  return 0
 }
 # see to it that the teardown function fails
 jshuTeardown() {
-    return 1
+  return 1
 }
 
 ##############################################################
 # unit test functions
 AlwaysPassTest() {
-	return ${jshuPASS}
+  return ${jshuPASS}
 }
-
-
-
 
 ##############################################################
 # main

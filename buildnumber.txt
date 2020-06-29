@@ -1,4 +1,4 @@
 pkgName: jshu
 version: 1.0.0
-release: 19
-epoch: 19
+release: 20
+epoch: 20

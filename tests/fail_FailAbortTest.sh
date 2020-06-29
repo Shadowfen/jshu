@@ -1,24 +1,21 @@
-#!/bin/bash 
+#!/bin/bash
 
 # source the unit test for scripts functions
 . ../jshutest.inc
 
 # see to it that the setup function fails
 jshuSetup() {
-    return 0
+  return 0
 }
 ##############################################################
 # unit test functions
 AbortingTest() {
-    return ${jshuFAILABORT}
+  return ${jshuFAILABORT}
 }
 
 AlwaysPassTest() {
-	return ${jshuPASS}
+  return ${jshuPASS}
 }
-
-
-
 
 ##############################################################
 # main

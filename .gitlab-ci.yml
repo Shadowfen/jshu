@@ -1,0 +1,54 @@
+stages:
+  - package
+  - test
+
+apk:
+  stage: package
+  image: alpine:3
+  script:
+    - apk add alpine-sdk
+    - abuild-keygen -a </dev/null
+    - abuild -F checksum
+    - abuild -F
+    - mkdir -p ./build/
+    - cp -fv /root/packages/*/*/jshu-*.apk ./build/
+    - apk add --allow-untrusted ./build/jshu-*.apk
+  artifacts:
+    paths:
+      - ./build/jshu-*.apk
+
+rpm:
+  stage: package
+  image: centos:7.6.1810
+  before_script:
+    - yum install -y rpm-build
+  script:
+    - mkdir -p ./build
+    - rpmbuild --define="%_topdir ${PWD}/build"  --define "%_sourcedir ${PWD}" -bb rpm.spec
+    - yum --disablerepo '*' install -y ./build/RPMS/noarch/*.rpm
+  artifacts:
+    paths:
+      - build/RPMS/noarch/
+
+test:
+  stage: test
+  image: alpine:3
+  before_script:
+    - apk add bash bc coreutils
+    - ln -fs /usr/bin/awk /bin/awk
+    - ln -fs /usr/bin/cut /bin/cut
+  script:
+    - bash -c 'cd ./sample/ && bash ./incrbuild_funcTest.sh'
+    - bash -c 'cd ./sample/ && bash ./incrbuild_unitTest.sh; [ ${?} -eq 2 ]'
+    - bash -c 'cd ./sample/ && bash ./wrapper_multipleTest.sh; [ ${?} -eq 4 ]'
+    - bash -c 'cd ./sample/ && bash ./wrapper_singleTest.sh'
+    - bash -c 'cd ./tests/ && bash ./adhocFunctionNamesTest.sh'
+    - bash -c 'cd ./tests/ && bash ./fail_FailAbortTest.sh; [ ${?} -eq 1 ]'
+    - bash -c 'cd ./tests/ && bash ./fail_adhocFunctionNamesTest.sh'
+    - bash -c 'cd ./tests/ && bash ./fail_jshuSetupTest.sh; [ ${?} -eq 1 ]'
+    - bash -c 'cd ./tests/ && bash ./fail_jshuTeardownTest.sh; [ ${?} -eq 1 ]'
+    - bash -c 'cd ./tests/ && bash ./wrapper_unfinishedTest.sh'
+  artifacts:
+    paths:
+      - sample/results/xunit/
+      - tests/results/xunit/
